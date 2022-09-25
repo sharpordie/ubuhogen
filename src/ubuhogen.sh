@@ -1,39 +1,95 @@
 #!/usr/bin/env bash
 
-update_android() { return 0 }
+update_android() {
 
-update_celluloid() { return 0 }
+	return 0
 
-update_docker() { return 0 }
+}
 
-update_figma() { return 0 }
+update_celluloid() {
 
-update_firefox() { return 0 }
+	return 0
 
-update_flutter() { return 0 }
+}
 
-update_git() { return 0 }
+update_docker() {
 
-update_gnome() { return 0 }
+	return 0
 
-update_nodejs() { return 0 }
+}
 
-update_pycharm() { return 0 }
+update_figma() {
 
-update_python() { 
+	return 0
+
+}
+
+update_firefox() {
+
+	return 0
+
+}
+
+update_flutter() {
+
+	return 0
+
+}
+
+update_git() {
+
+	return 0
+
+}
+
+update_gnome() {
+
+	return 0
+
+}
+
+update_nodejs() {
+
+	return 0
+
+}
+
+update_pycharm() {
+
+	return 0
+
+}
+
+update_python() {
 
 	# Handle the installation.
 	sudo apt -y install python3 python3-dev python3-venv
 
 }
 
-update_quickemu() { return 0 }
+update_quickemu() {
 
-update_system() { return 0 }
+	return 0
 
-update_vscode() { return 0 }
+}
 
-update_ydotool() { return 0 }
+update_system() {
+
+	return 0
+
+}
+
+update_vscode() {
+
+	return 0
+
+}
+
+update_ydotool() {
+
+	return 0
+
+}
 
 main() {
 
@@ -51,12 +107,12 @@ main() {
 
 	# Output the script welcome message.
 	read -r -d "" welcome <<-EOD
-	██╗░░░██╗██████╗░██╗░░░██╗██╗░░██╗░█████╗░░██████╗░███████╗███╗░░██╗
-	██║░░░██║██╔══██╗██║░░░██║██║░░██║██╔══██╗██╔════╝░██╔════╝████╗░██║
-	██║░░░██║██████╦╝██║░░░██║███████║██║░░██║██║░░██╗░█████╗░░██╔██╗██║
-	██║░░░██║██╔══██╗██║░░░██║██╔══██║██║░░██║██║░░╚██╗██╔══╝░░██║╚████║
-	╚██████╔╝██████╦╝╚██████╔╝██║░░██║╚█████╔╝╚██████╔╝███████╗██║░╚███║
-	░╚═════╝░╚═════╝░░╚═════╝░╚═╝░░╚═╝░╚════╝░░╚═════╝░╚══════╝╚═╝░░╚══╝
+		██╗░░░██╗██████╗░██╗░░░██╗██╗░░██╗░█████╗░░██████╗░███████╗███╗░░██╗
+		██║░░░██║██╔══██╗██║░░░██║██║░░██║██╔══██╗██╔════╝░██╔════╝████╗░██║
+		██║░░░██║██████╦╝██║░░░██║███████║██║░░██║██║░░██╗░█████╗░░██╔██╗██║
+		██║░░░██║██╔══██╗██║░░░██║██╔══██║██║░░██║██║░░╚██╗██╔══╝░░██║╚████║
+		╚██████╔╝██████╦╝╚██████╔╝██║░░██║╚█████╔╝╚██████╔╝███████╗██║░╚███║
+		░╚═════╝░╚═════╝░░╚═════╝░╚═╝░░╚═╝░╚════╝░░╚═════╝░╚══════╝╚═╝░░╚══╝
 	EOD
 	printf "\n\033[92m%s\033[00m\n\n" "$welcome"
 

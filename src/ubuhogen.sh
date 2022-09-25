@@ -2,7 +2,70 @@
 
 update_android() {
 
-	return 0
+	# Ensure the dependencies are installed.
+	sudo apt -qy install curl
+
+	# Handle the installation.
+	website="https://developer.android.com/studio#downloads"
+	pattern="android-studio-\K(\d.+)(?=-linux)"
+	version=$(curl -s "$website" | grep -oP "$pattern" | head -1)
+	present="$([[ -x $(command -v android-studio) ]] && echo 'true' || echo 'false')"
+	if [[ "$present" == "false" ]]; then
+		address="https://dl.google.com/dl/android/studio/ide-zips/$version/android-studio-$version-linux.tar.gz"
+		package="$(mktemp -d)/$(basename "$address")"
+		curl -sLA "Mozilla/5.0" "$address" -o "$package"
+		sudo tar -zxvf "$package" -C "/opt"
+		sudo ln -sf "/opt/android-studio/bin/studio.sh" "/bin/android-studio"
+		source "$HOME/.bashrc"
+	fi
+
+	# Change the desktop file.
+	desktop="/usr/share/applications/android-studio.desktop"
+	cat /dev/null | sudo tee "$desktop"
+	echo "[Desktop Entry]" | sudo tee -a "$desktop"
+	echo "Version=1.0" | sudo tee -a "$desktop"
+	echo "Type=Application" | sudo tee -a "$desktop"
+	echo "Name=Android Studio" | sudo tee -a "$desktop"
+	echo "Icon=androidstudio" | sudo tee -a "$desktop"
+	echo 'Exec="/opt/android-studio/bin/studio.sh" %f' | sudo tee -a "$desktop"
+	echo "Comment=The Drive to Develop" | sudo tee -a "$desktop"
+	echo "Categories=Development;IDE;" | sudo tee -a "$desktop"
+	echo "Terminal=false" | sudo tee -a "$desktop"
+	echo "StartupWMClass=jetbrains-studio" | sudo tee -a "$desktop"
+	echo "StartupNotify=true" | sudo tee -a "$desktop"
+
+	# Handle the cmdline-tools installation.
+	cmdline="$HOME/Android/Sdk/cmdline-tools"
+	if [[ ! -d $cmdline ]]; then
+		mkdir -p "$cmdline"
+		website="https://developer.android.com/studio#command-tools"
+		pattern="commandlinetools-win-\K(\d+)"
+		version=$(curl -s "$website" | grep -oP "$pattern" | head -1)
+		address="https://dl.google.com/android/repository"
+		address="$address/commandlinetools-linux-${version}_latest.zip"
+		archive=$(mktemp -d)/$(basename "$address")
+		curl -sLA "Mozilla/5.0" "$address" -o "$archive"
+		unzip -d "$cmdline" "$archive"
+		# chmod -R +x "$cmdline/cmdline-tools/bin" # TODO: Check if required.
+		jdkhome="/opt/android-studio/jre"
+		manager="$cmdline/cmdline-tools/bin/sdkmanager"
+		export JAVA_HOME="$jdkhome" && yes | $manager "cmdline-tools;latest"
+		rm -rf "$cmdline/cmdline-tools"
+	fi
+
+	# Adjust the required environment variables.
+	configs="$HOME/.bashrc"
+	if ! grep -q "ANDROID_HOME" "$configs" 2>/dev/null; then
+		[[ -s "$configs" ]] || touch "$configs"
+		[[ -z $(tail -1 "$configs") ]] || echo "" >>"$configs"
+		echo 'export ANDROID_HOME="$HOME/Android/Sdk"' >>"$configs"
+		echo 'export JAVA_HOME="/opt/android-studio/jre"' >>"$configs"
+		echo 'export PATH="$PATH:$JAVA_HOME/bin"' >>"$configs"
+		echo 'export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin"' >>"$configs"
+		echo 'export PATH="$PATH:$ANDROID_HOME/emulator"' >>"$configs"
+		echo 'export PATH="$PATH:$ANDROID_HOME/platform-tools"' >>"$configs"
+		source "$configs"
+	fi
 
 }
 

@@ -3,19 +3,20 @@
 update_android() {
 
 	# Ensure the dependencies are installed.
-	sudo apt -qy install curl
+	sudo apt -y install curl
 
 	# Handle the installation.
 	website="https://developer.android.com/studio#downloads"
 	pattern="android-studio-\K(\d.+)(?=-linux)"
-	version=$(curl -s "$website" | grep -oP "$pattern" | head -1)
-	present="$([[ -x $(command -v android-studio) ]] && echo 'true' || echo 'false')"
+	version="$(curl -s "$website" | grep -oP "$pattern" | head -1)"
+	present="$([[ -x $(command -v android-studio) ]] && echo "true" || echo "false")"
 	if [[ "$present" == "false" ]]; then
 		address="https://dl.google.com/dl/android/studio/ide-zips/$version/android-studio-$version-linux.tar.gz"
 		package="$(mktemp -d)/$(basename "$address")"
-		curl -sLA "Mozilla/5.0" "$address" -o "$package"
+		curl -LA "Mozilla/5.0" "$address" -o "$package"
+		sudo rm -r "/opt/android-studio"
 		sudo tar -zxvf "$package" -C "/opt"
-		sudo ln -sf "/opt/android-studio/bin/studio.sh" "/bin/android-studio"
+		sudo ln -fs "/opt/android-studio/bin/studio.sh" "/bin/android-studio"
 		source "$HOME/.bashrc"
 	fi
 
@@ -40,13 +41,12 @@ update_android() {
 		mkdir -p "$cmdline"
 		website="https://developer.android.com/studio#command-tools"
 		pattern="commandlinetools-win-\K(\d+)"
-		version=$(curl -s "$website" | grep -oP "$pattern" | head -1)
+		version="$(curl -s "$website" | grep -oP "$pattern" | head -1)"
 		address="https://dl.google.com/android/repository"
 		address="$address/commandlinetools-linux-${version}_latest.zip"
-		archive=$(mktemp -d)/$(basename "$address")
-		curl -sLA "Mozilla/5.0" "$address" -o "$archive"
+		archive="$(mktemp -d)/$(basename "$address")"
+		curl -LA "Mozilla/5.0" "$address" -o "$archive"
 		unzip -d "$cmdline" "$archive"
-		# chmod -R +x "$cmdline/cmdline-tools/bin" # TODO: Check if required.
 		jdkhome="/opt/android-studio/jre"
 		manager="$cmdline/cmdline-tools/bin/sdkmanager"
 		export JAVA_HOME="$jdkhome" && yes | $manager "cmdline-tools;latest"
@@ -119,7 +119,38 @@ update_nodejs() {
 
 update_pycharm() {
 
-	return 0
+	# Ensure the dependencies are installed.
+	sudo apt -y install curl jq
+
+	# Handle the installation.
+	website="https://data.services.jetbrains.com/products/releases?code=PCP&latest=true&type=release"
+	version="$(curl -Ls "$website" | jq -r ".PCP[0].version")"
+	present="$([[ -x $(command -v pycharm) ]] && echo "true" || echo "false")"
+	if [[ "$present" == "false" ]]; then
+		address="https://download.jetbrains.com/python/pycharm-professional-$version.tar.gz"
+		package="$(mktemp -d)/$(basename "$address")"
+		curl -LA "Mozilla/5.0" "$address" -o "$package"
+		sudo rm -r "/opt/pycharm"
+		sudo tar -zxvf "$package" -C "/opt"
+		sudo mv /opt/pycharm-* "/opt/pycharm"
+		sudo ln -sf "/opt/pycharm/bin/pycharm.sh" "/bin/pycharm"
+		source "$HOME/.bashrc"
+	fi
+
+	# Change the desktop file.
+	desktop="/usr/share/applications/jetbrains-pycharm.desktop"
+	cat /dev/null | sudo tee "$desktop"
+	echo "[Desktop Entry]" | sudo tee -a "$desktop"
+	echo "Version=1.0" | sudo tee -a "$desktop"
+	echo "Type=Application" | sudo tee -a "$desktop"
+	echo "Name=PyCharm" | sudo tee -a "$desktop"
+	echo "Icon=pycharm" | sudo tee -a "$desktop"
+	echo 'Exec="/opt/pycharm/bin/pycharm.sh" %f' | sudo tee -a "$desktop"
+	echo "Comment=Python IDE for Professional Developers" | sudo tee -a "$desktop"
+	echo "Categories=Development;IDE;" | sudo tee -a "$desktop"
+	echo "Terminal=false" | sudo tee -a "$desktop"
+	echo "StartupWMClass=jetbrains-pycharm" | sudo tee -a "$desktop"
+	echo "StartupNotify=true" | sudo tee -a "$desktop"
 
 }
 
@@ -184,7 +215,7 @@ main() {
 		"update_system"
 		"update_git"
 		"update_ydotool"
-		"update_android"
+		# "update_android"
 		"update_firefox"
 		"update_pycharm"
 		"update_vscode"

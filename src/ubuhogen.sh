@@ -1,34 +1,34 @@
 #!/usr/bin/env bash
 
-update_android() {; }
+update_android() { return 0 }
 
-update_celluloid() {; }
+update_celluloid() { return 0 }
 
-update_docker() {; }
+update_docker() { return 0 }
 
-update_figma() {; }
+update_figma() { return 0 }
 
-update_firefox() {; }
+update_firefox() { return 0 }
 
-update_flutter() {; }
+update_flutter() { return 0 }
 
-update_git() {; }
+update_git() { return 0 }
 
-update_gnome() {; }
+update_gnome() { return 0 }
 
-update_nodejs() {; }
+update_nodejs() { return 0 }
 
-update_pycharm() {; }
+update_pycharm() { return 0 }
 
-update_python() {; }
+update_python() { return 0 }
 
-uodate_quickemu() {; }
+uodate_quickemu() { return 0 }
 
-update_system() {; }
+update_system() { return 0 }
 
-update_vscode() {; }
+update_vscode() { return 0 }
 
-update_ydotool() {; }
+update_ydotool() { return 0 }
 
 main() {
 

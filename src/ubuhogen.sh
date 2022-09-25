@@ -182,24 +182,19 @@ main() {
 	# Handle the functions to be executed.
 	factors=(
 		"update_system"
-
 		"update_git"
 		"update_ydotool"
-
 		"update_android"
 		"update_firefox"
 		"update_pycharm"
 		"update_vscode"
-
 		"update_docker"
 		"update_flutter"
 		"update_nodejs"
 		"update_python"
-
 		"update_celluloid"
 		"update_figma"
 		"update_quickemu"
-
 		"update_gnome"
 	)
 

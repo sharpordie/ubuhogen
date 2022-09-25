@@ -64,44 +64,173 @@ update_android() {
 		echo 'export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin"' >>"$configs"
 		echo 'export PATH="$PATH:$ANDROID_HOME/emulator"' >>"$configs"
 		echo 'export PATH="$PATH:$ANDROID_HOME/platform-tools"' >>"$configs"
-		source "$configs"
+		export ANDROID_HOME="$HOME/Android/Sdk"
+		export JAVA_HOME="/opt/android-studio/jre"
+		export PATH="$PATH:$JAVA_HOME/bin"
+		export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin"
+		export PATH="$PATH:$ANDROID_HOME/emulator"
+		export PATH="$PATH:$ANDROID_HOME/platform-tools"
 	fi
+
+	# TODO: Handle the post-installation.
+	# if [[ "$present" == "false" ]]; then
+	# 	rm -r $HOME/.config/Google/AndroidStudio*
+	# 	sleep 1 && (sudo ydotoold &) &>/dev/null
+	# 	sleep 1 && (android-studio &) &>/dev/null
+	# 	sleep 8 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0 # sleep 8 + tab + enter
+	# 	sleep 20 && for i in $(seq 1 2); do sleep 0.4 && sudo ydotool key 15:1 15:0; done # tab2
+	# 	sleep 1 && sudo ydotool key 28:1 28:0 && sleep 1 && sudo ydotool key 28:1 28:0 # enter2
+	# 	sleep 2 && for i in $(seq 1 2); do sleep 0.4 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # sleep 2 + tab2 + enter
+	# 	sleep 2 && sudo ydotool key 28:1 28:0 # sleep 2 + enter
+	# 	sleep 2 && for i in $(seq 1 2); do sleep 0.4 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # sleep 2 + tab2 + enter
+	# 	sleep 2 && for i in $(seq 1 2); do sleep 0.4 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 106:1 106:0 # sleep 2 + tab2 + right
+	# 	sleep 2 && for i in $(seq 1 2); do sleep 0.4 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # sleep 2 + tab2 + enter
+	# 	sleep 2 && for i in $(seq 1 2); do sleep 0.4 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # sleep 2 + tab + enter
+	# fi
 
 }
 
 update_celluloid() {
 
-	return 0
+	# Handle the installation.
+	sudo add-apt-repository -y ppa:xuzhen666/gnome-mpv
+	sudo apt update && sudo apt -y install celluloid
+
+	# Handle the yt-dlp installation.
+	address"https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"
+	package"/usr/local/bin/yt-dlp"
+	sudo url -LA "Mozilla/5.0" "$address" -o "$package"
+	sudo chmod a+rx "$package"
+
+	# Change the default settings.
+	# gsettings set io.github.celluloid-player.celluloid mpv-options ''
+	dconf write /io/github/celluloid-player/celluloid/mpv-options "''"
+
+	# Change the mpv.conf file.
+	config1="$HOME/.config/celluloid/mpv.conf"
+	# gsettings set io.github.celluloid-player.celluloid mpv-config-enable true
+	# gsettings set io.github.celluloid-player.celluloid mpv-config-file "file://$config1"
+	dconf write /io/github/celluloid-player/celluloid/mpv-config-enable true
+	dconf write /io/github/celluloid-player/celluloid/mpv-config-file "'file://$config1'"
+	mkdir -p "$(dirname "$config1")" && cat /dev/null >"$config1"
+	echo "profile=gpu-hq" >>"$config1"
+	echo "vo=gpu-next" >>"$config1"
+	echo "hwdec=auto-copy" >>"$config1"
+	echo "keep-open=yes" >>"$config1"
+	echo "save-position-on-quit=yes" >>"$config1"
+	echo 'ytdl-format="bestvideo[height<=?2160]+bestaudio/best"' >>"$config1"
+	echo "[protocol.http]" >>"$config1"
+	echo "force-window=immediate" >>"$config1"
+	echo "[protocol.https]" >>"$config1"
+	echo "profile=protocol.http" >>"$config1"
+	echo "[protocol.ytdl]" >>"$config1"
+	echo "profile=protocol.http" >>"$config1"
+
+	# Change the input.conf file.
+	config2="$HOME/.config/celluloid/input.conf"
+	# gsettings set io.github.celluloid-player.celluloid mpv-input-config-enable true
+	# gsettings set io.github.celluloid-player.celluloid mpv-input-config-file "file://$config2"
+	dconf write /io/github/celluloid-player/celluloid/mpv-input-config-enable true
+	dconf write /io/github/celluloid-player/celluloid/mpv-input-config-file "'file://$config2'"
+	mkdir -p "$(dirname "$config2")" && cat /dev/null >"$config2"
 
 }
 
 update_docker() {
 
-	return 0
+	# Ensure the dependencies are installed.
+	sudo apt -y install apt-transport-https ca-certificates curl software-properties-common
+
+	# Handle the installation.
+	curl -fsSL "https://download.docker.com/linux/ubuntu/gpg" | sudo gpg --dearmor --yes -o "/usr/share/keyrings/docker-archive-keyring.gpg"
+	echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+	sudo apt update && sudo apt -y install docker-ce docker-compose-plugin
+	sudo usermod -aG docker $USER
 
 }
 
 update_figma() {
 
-	return 0
+	# Ensure the dependencies are installed.
+	sudo apt -y install apt-show-versions curl jq
+
+	# Handle the installation.
+	website="https://api.github.com/repos/Figma-Linux/figma-linux/releases"
+	version="$(curl -s "$website" | jq -r ".[0].tag_name" | tr -d "v")"
+	current="$(apt-show-versions figma-linux | grep -oP "[\d.]+" | tail -1)"
+	updated="$([[ ${current:0:4} == ${version:0:4} ]] && echo "true" || echo "false")"
+	if [[ "$updated" == "false" ]]; then
+		address="https://github.com/Figma-Linux/figma-linux/releases/download/v${version}/figma-linux_${version}_linux_amd64.deb"
+		package="$(mktemp -d)/$(basename "$address")"
+		curl -LA "Mozilla/5.0" "$address" -o "$package"
+		sudo apt install -y "$package"
+	fi
+
+	# Change the desktop file.
+	desktop="/usr/share/applications/figma-linux.desktop"
+	sudo sed -i "s/Name=.*/Name=Figma/" "$desktop"
 
 }
 
 update_firefox() {
 
-	return 0
+	# Remove the previously installed package.
+	sudo snap remove --purge firefox
+
+	# Handle the installation.
+	sudo add-apt-repository -y ppa:mozillateam/ppa
+	configs="/etc/apt/preferences.d/mozillateamppa"
+	echo "Package: firefox*" | sudo tee "$configs"
+	echo "Pin: release o=LP-PPA-mozillateam" | sudo tee -a "$configs"
+	echo "Pin-Priority: 501" | sudo tee -a "$configs"
+	sudo apt update && sudo apt -y install firefox
 
 }
 
 update_flutter() {
 
-	return 0
+	# Ensure the dependencies are installed.
+	sudo apt -y install build-essential clang cmake curl git
+	sudo apt -y install libgtk-3-dev ninja-build pkg-config
+
+	# Handle the installation.
+	deposit="$HOME/Android/Flutter" && mkdir -p "$deposit"
+	git clone "https://github.com/flutter/flutter.git" -b stable "$deposit"
+
+	# Adjust the required environment variables.
+	configs="$HOME/.bashrc"
+	if ! grep -q "Flutter" "$configs" 2>/dev/null; then
+		[[ -s "$configs" ]] || touch "$configs"
+		[[ -z $(tail -1 "$configs") ]] || echo "" >>"$configs"
+		echo 'export PATH="$PATH:$HOME/Android/Flutter/bin"' >>"$configs"
+		export PATH="$PATH:$HOME/Android/Flutter/bin"
+	fi
+
+	# Change the default settings.
+	flutter config --no-analytics
+
+	# Handle the post-installation.
+	flutter precache && flutter upgrade
+	yes | flutter doctor --android-licenses
 
 }
 
 update_git() {
 
-	return 0
+	default=${1:-master}
+	gitmail=${2:-sharpordie@outlook.com}
+	gituser=${3:-sharpordie}
+
+	# Handle the installation.
+	sudo add-apt-repository -y ppa:git-core/ppa
+	sudo apt update && sudo apt -y install git
+
+	# Change the default settings.
+	git config --global credential.helper "store"
+	git config --global http.postBuffer 1048576000
+	git config --global init.defaultBranch "$default"
+	git config --global user.email "$gitmail"
+	git config --global user.name "$gituser"
 
 }
 
@@ -113,7 +242,27 @@ update_gnome() {
 
 update_nodejs() {
 
-	return 0
+	version=${1:-16}
+
+	# Handle the installation.
+	curl -fsSL "https://deb.nodesource.com/setup_$version.x" | sudo -E bash -
+	sudo apt-get install -y nodejs
+
+	# Create the directory for global modules.
+	configs="$HOME/.bashrc" && deposit="$HOME/.npm-global"
+	mkdir -p "$deposit" && npm config set prefix "$deposit"
+	if ! grep -q ".npm-global" "$configs" 2>/dev/null; then
+		[[ -s "$configs" ]] || touch "$configs"
+		[[ -z $(tail -1 "$configs") ]] || echo "" >>"$configs"
+		echo 'export PATH="$PATH:$HOME/.npm-global/bin"' >>"$configs"
+		source "$configs"
+	fi
+
+	# Update some global modules.
+	npm install -g pnpm
+
+	# Change the default settings.
+	npm set audit false
 
 }
 
@@ -136,6 +285,10 @@ update_pycharm() {
 		sudo ln -sf "/opt/pycharm/bin/pycharm.sh" "/bin/pycharm"
 		source "$HOME/.bashrc"
 	fi
+
+	# TODO: Handle the post-installation.
+	# if [[ "$present" == "false" ]]; then
+	# fi
 
 	# Change the desktop file.
 	desktop="/usr/share/applications/jetbrains-pycharm.desktop"
@@ -181,7 +334,16 @@ update_vscode() {
 
 update_ydotool() {
 
-	return 0
+	# Remove the previously installed package.
+	sudo apt -y autoremove --purge ydotool
+
+	# Ensure the dependencies are installed.
+	sudo apt -y install build-essential cmake git libboost-program-options-dev scdoc
+
+	# Handle the installation.
+	current=$(dirname "$(readlink -f "$0")") && git clone "https://github.com/ReimuNotMoe/ydotool.git"
+	cd ydotool && mkdir build && cd build && cmake .. && make && sudo make install
+	cd "$current" && source "$HOME/.bashrc" && rm -rf ydotool
 
 }
 
@@ -215,7 +377,7 @@ main() {
 		"update_system"
 		"update_git"
 		"update_ydotool"
-		# "update_android"
+		"update_android"
 		"update_firefox"
 		"update_pycharm"
 		"update_vscode"

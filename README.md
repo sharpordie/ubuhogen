@@ -15,7 +15,7 @@ I obviously encourage you to modify this script for your own use.
 ### Download and run the script
 
 ```shell
-curl -s https://raw.githubusercontent.com/sharpordie/ubuhogen/master/src/ubuhogen.sh | bash
+wget -qO- https://raw.githubusercontent.com/sharpordie/ubuhogen/master/src/ubuhogen.sh | bash
 ```
 
 ## `Gallery`

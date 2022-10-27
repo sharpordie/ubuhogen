@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-update_android() {
+update_android_studio() {
 
 	# Update dependencies
 	sudo apt -y install curl
@@ -153,9 +153,9 @@ update_figma() {
 	website="https://api.github.com/repos/Figma-Linux/figma-linux/releases"
 	version="$(curl -s "$website" | jq -r ".[0].tag_name" | tr -d "v")"
 	current="$(apt-show-versions figma-linux | grep -oP "[\d.]+" | tail -1)"
-	updated="$([[ ${current:0:4} == ${version:0:4} ]] && echo "true" || echo "false")"
+	updated="$([[ ${current:0:4} == "${version:0:4}" ]] && echo "true" || echo "false")"
 	if [[ "$updated" == "false" ]]; then
-		address="https://github.com/Figma-Linux/figma-linux/releases/download/v${version}/figma-linux_${version}_linux_amd64.deb"
+		address="https://github.com/Figma-Linux/figma-linux/releases/download/v$version/figma-linux_${version}_linux_amd64.deb"
 		package="$(mktemp -d)/$(basename "$address")"
 		curl -LA "Mozilla/5.0" "$address" -o "$package"
 		sudo apt install -y "$package"
@@ -311,6 +311,7 @@ update_python() {
 	sudo apt -y install python3 python3-dev python3-venv
 
 	# Update poetry
+	return
 
 }
 
@@ -377,18 +378,18 @@ main() {
 		"update_system"
 		"update_git"
 		"update_ydotool"
-		"update_android"
-		"update_firefox"
-		"update_pycharm"
-		"update_vscode"
-		"update_docker"
-		"update_flutter"
-		"update_nodejs"
-		"update_python"
-		"update_celluloid"
-		"update_figma"
-		"update_quickemu"
-		"update_gnome"
+		"update_android_studio"
+		# "update_firefox"
+		# "update_pycharm"
+		# "update_vscode"
+		# "update_docker"
+		# "update_flutter"
+		# "update_nodejs"
+		# "update_python"
+		# "update_celluloid"
+		# "update_figma"
+		# "update_quickemu"
+		# "update_gnome"
 	)
 
 	# Output progress
@@ -415,4 +416,4 @@ main() {
 
 }
 
-[ "${BASH_SOURCE[0]}" == "$0" ] && main
+[[ "${BASH_SOURCE[0]}" == "$0" ]] && main

@@ -16,7 +16,6 @@ I obviously encourage you to modify this script for your own use.
 
 ```shell
 curl -s https://raw.githubusercontent.com/sharpordie/ubuhogen/master/src/ubuhogen.sh | bash
-wget -qO- https://raw.githubusercontent.com/sharpordie/ubuhogen/master/src/ubuhogen.sh | sh
 ```
 
 ## `Gallery`

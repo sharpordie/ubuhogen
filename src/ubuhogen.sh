@@ -80,25 +80,25 @@ update_android_studio() {
 	yes | sdkmanager 'sources;android-33'
 	yes | sdkmanager 'system-images;android-33;google_apis;x86_64'
 	avdmanager create avd -n 'Pixel_5' -d 'pixel_5' -k 'system-images;android-33;google_apis;x86_64'
-	# if [[ "$present" == "false" ]]; then
-	sleep 1 && (sudo ydotoold &) &>/dev/null
-	sleep 1 && (android-studio &) &>/dev/null
-	# Handle the import dialog
-	sleep 8 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0 # {TAB} + {ENTER}
-	# Handle the improve dialog
-	sleep 20 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # {TAB} + {TAB} + {ENTER}
-	# Handle the wizard window
-	sleep 1 && sudo ydotool key 28:1 28:0 # {ENTER}
-	sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # {TAB} + {TAB} + {ENTER}
-	sleep 1 && sudo ydotool key 28:1 28:0 # {ENTER}
-	sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # {TAB} + {TAB} + {ENTER}
-	sleep 1 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0 # {TAB} + {ENTER}
-	# Handle the finish button
-	sleep 1 && sudo ydotool key 56:1 62:1 62:0 56:0 # {ALT}{F4}
-	sleep 1 && sudo ydotool key 28:1 28:0 && sleep 1 && sudo ydotool key 28:1 28:0 # {ENTER} + {ENTER}
-	# Finish the latest window
-	sleep 8 && sudo ydotool key 56:1 62:1 62:0 56:0 # {ALT}{F4}
-	# fi
+	if [[ "$present" == "false" ]]; then
+		sleep 1 && (sudo ydotoold &) &>/dev/null
+		sleep 1 && (android-studio &) &>/dev/null
+		# Handle the import dialog
+		sleep 8 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0 # {TAB} + {ENTER}
+		# Handle the improve dialog
+		sleep 20 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # {TAB} + {TAB} + {ENTER}
+		# Handle the wizard window
+		sleep 1 && sudo ydotool key 28:1 28:0 # {ENTER}
+		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # {TAB} + {TAB} + {ENTER}
+		sleep 1 && sudo ydotool key 28:1 28:0 # {ENTER}
+		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # {TAB} + {TAB} + {ENTER}
+		sleep 1 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0 # {TAB} + {ENTER}
+		# Handle the finish button
+		sleep 1 && sudo ydotool key 56:1 62:1 62:0 56:0 # {ALT}{F4}
+		sleep 1 && sudo ydotool key 28:1 28:0 && sleep 1 && sudo ydotool key 28:1 28:0 # {ENTER} + {ENTER}
+		# Finish the latest window
+		sleep 8 && sudo ydotool key 56:1 62:1 62:0 56:0 # {ALT}{F4}
+	fi
 
 }
 

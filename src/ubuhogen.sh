@@ -413,7 +413,8 @@ main() {
 	for element in "${factors[@]}"; do
 		written=$(basename "$(echo "$element" | cut -d '"' -f 1)" | tr "[:lower:]" "[:upper:]")
 		started=$(date +"%s") && printf "$loading" "$written" "--:--:--"
-		eval "$element" >/dev/null 2>&1 && current="$success" || current="$failure"
+		# eval "$element" >/dev/null 2>&1 && current="$success" || current="$failure"
+		eval "$element" && current="$success" || current="$failure"
 		extinct=$(date +"%s") && elapsed=$((extinct - started))
 		elapsed=$(printf "%02d:%02d:%02d\n" $((elapsed / 3600)) $(((elapsed % 3600) / 60)) $((elapsed % 60)))
 		printf "$current" "$written" "$elapsed"

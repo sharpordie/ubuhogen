@@ -2,10 +2,10 @@
 
 update_android() {
 
-	# Ensure the dependencies are installed.
+	# Update dependencies
 	sudo apt -y install curl
 
-	# Handle the installation.
+	# Update android-studio
 	website="https://developer.android.com/studio#downloads"
 	pattern="android-studio-\K(\d.+)(?=-linux)"
 	version="$(curl -s "$website" | grep -oP "$pattern" | head -1)"
@@ -20,7 +20,7 @@ update_android() {
 		source "$HOME/.bashrc"
 	fi
 
-	# Change the desktop file.
+	# Create desktop
 	desktop="/usr/share/applications/android-studio.desktop"
 	cat /dev/null | sudo tee "$desktop"
 	echo "[Desktop Entry]" | sudo tee -a "$desktop"
@@ -35,7 +35,7 @@ update_android() {
 	echo "StartupWMClass=jetbrains-studio" | sudo tee -a "$desktop"
 	echo "StartupNotify=true" | sudo tee -a "$desktop"
 
-	# Handle the cmdline-tools installation.
+	# Update cmdline-tools
 	cmdline="$HOME/Android/Sdk/cmdline-tools"
 	if [[ ! -d $cmdline ]]; then
 		mkdir -p "$cmdline"
@@ -53,7 +53,7 @@ update_android() {
 		rm -rf "$cmdline/cmdline-tools"
 	fi
 
-	# Adjust the required environment variables.
+	# Adjust environment
 	configs="$HOME/.bashrc"
 	if ! grep -q "ANDROID_HOME" "$configs" 2>/dev/null; then
 		[[ -s "$configs" ]] || touch "$configs"
@@ -72,7 +72,7 @@ update_android() {
 		export PATH="$PATH:$ANDROID_HOME/platform-tools"
 	fi
 
-	# TODO: Handle the post-installation.
+	# Finish installation
 	# if [[ "$present" == "false" ]]; then
 	# 	rm -r $HOME/.config/Google/AndroidStudio*
 	# 	sleep 1 && (sudo ydotoold &) &>/dev/null
@@ -92,24 +92,21 @@ update_android() {
 
 update_celluloid() {
 
-	# Handle the installation.
+	# Update celluloid
 	sudo add-apt-repository -y ppa:xuzhen666/gnome-mpv
 	sudo apt update && sudo apt -y install celluloid
 
-	# Handle the yt-dlp installation.
+	# Update yt-dlp
 	address"https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"
 	package"/usr/local/bin/yt-dlp"
 	sudo url -LA "Mozilla/5.0" "$address" -o "$package"
 	sudo chmod a+rx "$package"
 
-	# Change the default settings.
-	# gsettings set io.github.celluloid-player.celluloid mpv-options ''
+	# Change settings
 	dconf write /io/github/celluloid-player/celluloid/mpv-options "''"
 
-	# Change the mpv.conf file.
+	# Create mpv.conf
 	config1="$HOME/.config/celluloid/mpv.conf"
-	# gsettings set io.github.celluloid-player.celluloid mpv-config-enable true
-	# gsettings set io.github.celluloid-player.celluloid mpv-config-file "file://$config1"
 	dconf write /io/github/celluloid-player/celluloid/mpv-config-enable true
 	dconf write /io/github/celluloid-player/celluloid/mpv-config-file "'file://$config1'"
 	mkdir -p "$(dirname "$config1")" && cat /dev/null >"$config1"
@@ -126,10 +123,8 @@ update_celluloid() {
 	echo "[protocol.ytdl]" >>"$config1"
 	echo "profile=protocol.http" >>"$config1"
 
-	# Change the input.conf file.
+	# Create input.conf
 	config2="$HOME/.config/celluloid/input.conf"
-	# gsettings set io.github.celluloid-player.celluloid mpv-input-config-enable true
-	# gsettings set io.github.celluloid-player.celluloid mpv-input-config-file "file://$config2"
 	dconf write /io/github/celluloid-player/celluloid/mpv-input-config-enable true
 	dconf write /io/github/celluloid-player/celluloid/mpv-input-config-file "'file://$config2'"
 	mkdir -p "$(dirname "$config2")" && cat /dev/null >"$config2"
@@ -138,10 +133,10 @@ update_celluloid() {
 
 update_docker() {
 
-	# Ensure the dependencies are installed.
+	# Update dependencies
 	sudo apt -y install apt-transport-https ca-certificates curl software-properties-common
 
-	# Handle the installation.
+	# Update docker
 	curl -fsSL "https://download.docker.com/linux/ubuntu/gpg" | sudo gpg --dearmor --yes -o "/usr/share/keyrings/docker-archive-keyring.gpg"
 	echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
 	sudo apt update && sudo apt -y install docker-ce docker-compose-plugin
@@ -151,10 +146,10 @@ update_docker() {
 
 update_figma() {
 
-	# Ensure the dependencies are installed.
+	# Update dependencies
 	sudo apt -y install apt-show-versions curl jq
 
-	# Handle the installation.
+	# Update figma-linux
 	website="https://api.github.com/repos/Figma-Linux/figma-linux/releases"
 	version="$(curl -s "$website" | jq -r ".[0].tag_name" | tr -d "v")"
 	current="$(apt-show-versions figma-linux | grep -oP "[\d.]+" | tail -1)"
@@ -166,7 +161,7 @@ update_figma() {
 		sudo apt install -y "$package"
 	fi
 
-	# Change the desktop file.
+	# Adjust desktop
 	desktop="/usr/share/applications/figma-linux.desktop"
 	sudo sed -i "s/Name=.*/Name=Figma/" "$desktop"
 
@@ -174,10 +169,10 @@ update_figma() {
 
 update_firefox() {
 
-	# Remove the previously installed package.
+	# Remove package
 	sudo snap remove --purge firefox
 
-	# Handle the installation.
+	# Update firefox
 	sudo add-apt-repository -y ppa:mozillateam/ppa
 	configs="/etc/apt/preferences.d/mozillateamppa"
 	echo "Package: firefox*" | sudo tee "$configs"
@@ -189,15 +184,15 @@ update_firefox() {
 
 update_flutter() {
 
-	# Ensure the dependencies are installed.
+	# Update dependencies
 	sudo apt -y install build-essential clang cmake curl git
 	sudo apt -y install libgtk-3-dev ninja-build pkg-config
 
-	# Handle the installation.
+	# Update flutter
 	deposit="$HOME/Android/Flutter" && mkdir -p "$deposit"
 	git clone "https://github.com/flutter/flutter.git" -b stable "$deposit"
 
-	# Adjust the required environment variables.
+	# Adjust environment
 	configs="$HOME/.bashrc"
 	if ! grep -q "Flutter" "$configs" 2>/dev/null; then
 		[[ -s "$configs" ]] || touch "$configs"
@@ -206,11 +201,14 @@ update_flutter() {
 		export PATH="$PATH:$HOME/Android/Flutter/bin"
 	fi
 
-	# Change the default settings.
+	# Change settings
 	flutter config --no-analytics
 
-	# Handle the post-installation.
-	flutter precache && flutter upgrade
+	# Finish installation
+	flutter precache
+	flutter upgrade
+
+	# Accept licenses
 	yes | flutter doctor --android-licenses
 
 }
@@ -221,11 +219,11 @@ update_git() {
 	gitmail=${2:-sharpordie@outlook.com}
 	gituser=${3:-sharpordie}
 
-	# Handle the installation.
+	# Update git
 	sudo add-apt-repository -y ppa:git-core/ppa
 	sudo apt update && sudo apt -y install git
 
-	# Change the default settings.
+	# Change settings
 	git config --global credential.helper "store"
 	git config --global http.postBuffer 1048576000
 	git config --global init.defaultBranch "$default"
@@ -244,11 +242,11 @@ update_nodejs() {
 
 	version=${1:-16}
 
-	# Handle the installation.
+	#  Update nodejs
 	curl -fsSL "https://deb.nodesource.com/setup_$version.x" | sudo -E bash -
 	sudo apt-get install -y nodejs
 
-	# Create the directory for global modules.
+	# Adjust environment
 	configs="$HOME/.bashrc" && deposit="$HOME/.npm-global"
 	mkdir -p "$deposit" && npm config set prefix "$deposit"
 	if ! grep -q ".npm-global" "$configs" 2>/dev/null; then
@@ -258,20 +256,20 @@ update_nodejs() {
 		source "$configs"
 	fi
 
-	# Update some global modules.
-	npm install -g pnpm
-
-	# Change the default settings.
+	# Change settings
 	npm set audit false
+
+	# Update modules
+	npm install -g pnpm
 
 }
 
 update_pycharm() {
 
-	# Ensure the dependencies are installed.
+	# Update dependencies
 	sudo apt -y install curl jq
 
-	# Handle the installation.
+	# Update pycharm-professional
 	website="https://data.services.jetbrains.com/products/releases?code=PCP&latest=true&type=release"
 	version="$(curl -Ls "$website" | jq -r ".PCP[0].version")"
 	present="$([[ -x $(command -v pycharm) ]] && echo "true" || echo "false")"
@@ -286,11 +284,7 @@ update_pycharm() {
 		source "$HOME/.bashrc"
 	fi
 
-	# TODO: Handle the post-installation.
-	# if [[ "$present" == "false" ]]; then
-	# fi
-
-	# Change the desktop file.
+	# Change desktop
 	desktop="/usr/share/applications/jetbrains-pycharm.desktop"
 	cat /dev/null | sudo tee "$desktop"
 	echo "[Desktop Entry]" | sudo tee -a "$desktop"
@@ -305,12 +299,18 @@ update_pycharm() {
 	echo "StartupWMClass=jetbrains-pycharm" | sudo tee -a "$desktop"
 	echo "StartupNotify=true" | sudo tee -a "$desktop"
 
+	# Finish installation
+	# if [[ "$present" == "false" ]]; then
+	# fi
+
 }
 
 update_python() {
 
-	# Handle the installation.
+	# Update python
 	sudo apt -y install python3 python3-dev python3-venv
+
+	# Update poetry
 
 }
 
@@ -334,13 +334,13 @@ update_vscode() {
 
 update_ydotool() {
 
-	# Remove the previously installed package.
-	sudo apt -y autoremove --purge ydotool
-
-	# Ensure the dependencies are installed.
+	# Update dependencies
 	sudo apt -y install build-essential cmake git libboost-program-options-dev scdoc
 
-	# Handle the installation.
+	# Remove package
+	sudo apt -y autoremove --purge ydotool
+
+	# Update ydotool
 	current=$(dirname "$(readlink -f "$0")") && git clone "https://github.com/ReimuNotMoe/ydotool.git"
 	cd ydotool && mkdir build && cd build && cmake .. && make && sudo make install
 	cd "$current" && source "$HOME/.bashrc" && rm -rf ydotool
@@ -349,19 +349,19 @@ update_ydotool() {
 
 main() {
 
-	# Prompt for sudo password.
+	# Prompt password
 	sudo -v && clear
 
-	# Remove the sudo timeout.
+	# Remove timeout
 	echo "Defaults timestamp_timeout=-1" | sudo tee "/etc/sudoers.d/disable_timeout" &>/dev/null
 
-	# Remove the gnome automatic screensaver.
+	# Remove screensaver
 	gsettings set org.gnome.desktop.screensaver lock-enabled false
 
-	# Change the terminal title.
+	# Change title
 	printf "\033]0;%s\007" "ubuhogen"
 
-	# Output the script welcome message.
+	# Output welcome
 	read -r -d "" welcome <<-EOD
 		██╗░░░██╗██████╗░██╗░░░██╗██╗░░██╗░█████╗░░██████╗░███████╗███╗░░██╗
 		██║░░░██║██╔══██╗██║░░░██║██║░░██║██╔══██╗██╔════╝░██╔════╝████╗░██║
@@ -372,7 +372,7 @@ main() {
 	EOD
 	printf "\n\033[92m%s\033[00m\n\n" "$welcome"
 
-	# Handle the functions to be executed.
+	# Handle functions
 	factors=(
 		"update_system"
 		"update_git"
@@ -391,7 +391,7 @@ main() {
 		"update_gnome"
 	)
 
-	# Output the function execution progress.
+	# Output progress
 	maximum=$((${#welcome} / $(echo "$welcome" | wc -l)))
 	heading="\r%-"$((maximum - 20))"s   %-6s   %-8s\n\n"
 	loading="\r%-"$((maximum - 20))"s   \033[93mACTIVE\033[0m   %-8s\b"
@@ -407,10 +407,10 @@ main() {
 		printf "$current" "$written" "$elapsed"
 	done
 
-	# Revert the gnome automatic screensaver.
+	# Revert screensaver
 	gsettings set org.gnome.desktop.screensaver lock-enabled true
 
-	# Revert the sudo timeout.
+	# Revert timeout
 	printf "\n" && sudo rm "/etc/sudoers.d/disable_timeout"
 
 }

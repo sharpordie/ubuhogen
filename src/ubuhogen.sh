@@ -374,7 +374,7 @@ main() {
 	printf "\n\033[92m%s\033[00m\n\n" "$welcome"
 
 	# Handle functions
-	factors=(
+	factors=@(
 		"update_system"
 		"update_git"
 		"update_ydotool"

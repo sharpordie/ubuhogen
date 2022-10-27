@@ -84,22 +84,20 @@ update_android_studio() {
 		sleep 1 && (sudo ydotoold &) &>/dev/null
 		sleep 1 && (android-studio &) &>/dev/null
 		# Handle the import dialog
-		# sleep 8 && sudo ydotool key 56:1 15:1 15:0 56:0 # sleep 8 & alt/tab
-		sleep 8 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0 # sleep 1 + tab + enter
+		sleep 8 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0 # {TAB} + {ENTER}
 		# Handle the improve dialog
-		# sleep 20 && sudo ydotool key 56:1 15:1 15:0 56:0 # sleep 20 & alt/tab
-		sleep 20 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # tab2 + enter
+		sleep 20 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # {TAB} + {TAB} + {ENTER}
 		# Handle the wizard window
-		sleep 1 && sudo ydotool key 28:1 28:0 # enter
-		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # sleep 2 + tab2 + enter00
-		sleep 1 && sudo ydotool key 28:1 28:0 # sleep 2 + enter00
-		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # sleep 2 + tab2 + enter00
-		sleep 1 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0 # sleep 2 + tab + enter (FINISH)
+		sleep 1 && sudo ydotool key 28:1 28:0 # {ENTER}
+		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # {TAB} + {TAB} + {ENTER}
+		sleep 1 && sudo ydotool key 28:1 28:0 # {ENTER}
+		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # {TAB} + {TAB} + {ENTER}
+		sleep 1 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0 # {TAB} + {ENTER}
 		# Handle the finish button
-		sleep 1 && sudo ydotool key 56:1 62:1 62:0 56:0 
-		sleep 1 && sudo ydotool key 28:1 28:0 && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool key 56:1 62:1 62:0 56:0 # {ALT}{F4}
+		sleep 1 && sudo ydotool key 28:1 28:0 && sleep 1 && sudo ydotool key 28:1 28:0 # {ENTER} + {ENTER}
 		# Finish the latest window
-		sleep 8 && sudo ydotool key 56:1 62:1 62:0 56:0
+		sleep 8 && sudo ydotool key 56:1 62:1 62:0 56:0 # {ALT}{F4}
 	fi
 
 }
@@ -389,7 +387,7 @@ main() {
 
 	# Handle functions
 	factors=(
-		"update_system"
+		"update_system",
 		"update_git"
 		"update_ydotool"
 		"update_android_studio"

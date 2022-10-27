@@ -10,12 +10,12 @@ This is an opiniated post installation script for Ubuntu.
 It was specially designed for my personal use, so don't execute it blindly.
 I obviously encourage you to modify this script for your own use.
 
-## `Usages`
+## `Samples`
 
 ### Download and run the script
 
 ```shell
-curl -O https://raw.githubusercontent.com/sharpordie/ubuhogen/master/src/ubuhogen.sh | sh
+curl https://raw.githubusercontent.com/sharpordie/ubuhogen/master/src/ubuhogen.sh | bash
 ```
 
 ## `Gallery`

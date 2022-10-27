@@ -76,6 +76,7 @@ update_android_studio() {
 	yes | sdkmanager 'build-tools;33.0.0'
 	yes | sdkmanager 'emulator'
 	yes | sdkmanager 'platform-tools'
+	yes | sdkmanager 'platforms;android-32'
 	yes | sdkmanager 'platforms;android-33'
 	yes | sdkmanager 'sources;android-33'
 	yes | sdkmanager 'system-images;android-33;google_apis;x86_64'
@@ -413,8 +414,7 @@ main() {
 	for element in "${factors[@]}"; do
 		written=$(basename "$(echo "$element" | cut -d '"' -f 1)" | tr "[:lower:]" "[:upper:]")
 		started=$(date +"%s") && printf "$loading" "$written" "--:--:--"
-		# eval "$element" >/dev/null 2>&1 && current="$success" || current="$failure"
-		eval "$element" && current="$success" || current="$failure"
+		eval "$element" >/dev/null 2>&1 && current="$success" || current="$failure"
 		extinct=$(date +"%s") && elapsed=$((extinct - started))
 		elapsed=$(printf "%02d:%02d:%02d\n" $((elapsed / 3600)) $(((elapsed % 3600) / 60)) $((elapsed % 60)))
 		printf "$current" "$written" "$elapsed"

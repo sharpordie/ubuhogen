@@ -387,7 +387,7 @@ main() {
 
 	# Handle functions
 	factors=(
-		"update_system",
+		"update_system"
 		"update_git"
 		"update_ydotool"
 		"update_android_studio"

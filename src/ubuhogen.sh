@@ -323,7 +323,6 @@ update_python() {
 	sudo apt -y install python3 python3-dev python3-venv
 
 	# Update poetry
-	return
 
 }
 

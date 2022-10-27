@@ -4,20 +4,20 @@
 <p>Configuration script for Ubuntu</p>
 </div><hr>
 
-## Preface
+## `Preface`
 
 This is an opiniated post installation script for Ubuntu.
 It was specially designed for my personal use, so don't execute it blindly.
 I obviously encourage you to modify this script for your own use.
 
-## Usages
+## `Usages`
 
 ### Download and run the script
 
 ```shell
-curl https://raw.githubusercontent.com/sharpordie/ubuhogen/master/src/ubuhogen.sh | sh
+curl -O https://raw.githubusercontent.com/sharpordie/ubuhogen/master/src/ubuhogen.sh | sh
 ```
 
-## Gallery
+## `Gallery`
 
-<a href="assets/img1.png"><img src="assets/img1.png" width="49.5%"/></a><a><img src="assets/none.png" width="1%"/></a><a href="assets/img2.png"><img src="assets/img2.png" width="49.5%"/></a><a href="assets/img3.png"><img src="assets/img3.png" width="49.5%"/></a><a><img src="assets/none.png" width="1%"/></a><a href="assets/img4.png"><img src="assets/img4.png" width="49.5%"/></a>
+<a href="assets/img1.png"><img src="assets/img1.png" width="49%"/></a><a><img src="assets/none.png" width="2%"/></a><a href="assets/img2.png"><img src="assets/img2.png" width="49%"/></a>

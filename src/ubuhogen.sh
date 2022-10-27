@@ -73,20 +73,34 @@ update_android_studio() {
 	fi
 
 	# Finish installation
-	# if [[ "$present" == "false" ]]; then
-	# 	rm -r $HOME/.config/Google/AndroidStudio*
-	# 	sleep 1 && (sudo ydotoold &) &>/dev/null
-	# 	sleep 1 && (android-studio &) &>/dev/null
-	# 	sleep 8 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0 # sleep 8 + tab + enter
-	# 	sleep 20 && for i in $(seq 1 2); do sleep 0.4 && sudo ydotool key 15:1 15:0; done # tab2
-	# 	sleep 1 && sudo ydotool key 28:1 28:0 && sleep 1 && sudo ydotool key 28:1 28:0 # enter2
-	# 	sleep 2 && for i in $(seq 1 2); do sleep 0.4 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # sleep 2 + tab2 + enter
-	# 	sleep 2 && sudo ydotool key 28:1 28:0 # sleep 2 + enter
-	# 	sleep 2 && for i in $(seq 1 2); do sleep 0.4 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # sleep 2 + tab2 + enter
-	# 	sleep 2 && for i in $(seq 1 2); do sleep 0.4 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 106:1 106:0 # sleep 2 + tab2 + right
-	# 	sleep 2 && for i in $(seq 1 2); do sleep 0.4 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # sleep 2 + tab2 + enter
-	# 	sleep 2 && for i in $(seq 1 2); do sleep 0.4 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # sleep 2 + tab + enter
-	# fi
+	yes | sdkmanager 'build-tools;33.0.0'
+	yes | sdkmanager 'emulator'
+	yes | sdkmanager 'platform-tools'
+	yes | sdkmanager 'platforms;android-33'
+	yes | sdkmanager 'sources;android-33'
+	yes | sdkmanager 'system-images;android-33;google_apis;x86_64'
+	avdmanager create avd -n 'Pixel_5' -d 'pixel_5' -k 'system-images;android-33;google_apis;x86_64'
+	if [[ "$present" == "false" ]]; then
+		sleep 1 && (sudo ydotoold &) &>/dev/null
+		sleep 1 && (android-studio &) &>/dev/null
+		# Handle the import dialog
+		# sleep 8 && sudo ydotool key 56:1 15:1 15:0 56:0 # sleep 8 & alt/tab
+		sleep 8 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0 # sleep 1 + tab + enter
+		# Handle the improve dialog
+		# sleep 20 && sudo ydotool key 56:1 15:1 15:0 56:0 # sleep 20 & alt/tab
+		sleep 20 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # tab2 + enter
+		# Handle the wizard window
+		sleep 1 && sudo ydotool key 28:1 28:0 # enter
+		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # sleep 2 + tab2 + enter00
+		sleep 1 && sudo ydotool key 28:1 28:0 # sleep 2 + enter00
+		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # sleep 2 + tab2 + enter00
+		sleep 1 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0 # sleep 2 + tab + enter (FINISH)
+		# Handle the finish button
+		sleep 1 && sudo ydotool key 56:1 62:1 62:0 56:0 
+		sleep 1 && sudo ydotool key 28:1 28:0 && sleep 1 && sudo ydotool key 28:1 28:0
+		# Finish the latest window
+		sleep 8 && sudo ydotool key 56:1 62:1 62:0 56:0
+	fi
 
 }
 
@@ -102,13 +116,8 @@ update_celluloid() {
 	sudo url -LA "Mozilla/5.0" "$address" -o "$package"
 	sudo chmod a+rx "$package"
 
-	# Change settings
-	dconf write /io/github/celluloid-player/celluloid/mpv-options "''"
-
 	# Create mpv.conf
 	config1="$HOME/.config/celluloid/mpv.conf"
-	dconf write /io/github/celluloid-player/celluloid/mpv-config-enable true
-	dconf write /io/github/celluloid-player/celluloid/mpv-config-file "'file://$config1'"
 	mkdir -p "$(dirname "$config1")" && cat /dev/null >"$config1"
 	echo "profile=gpu-hq" >>"$config1"
 	echo "vo=gpu-next" >>"$config1"
@@ -125,9 +134,14 @@ update_celluloid() {
 
 	# Create input.conf
 	config2="$HOME/.config/celluloid/input.conf"
+	mkdir -p "$(dirname "$config2")" && cat /dev/null >"$config2"
+
+	# Change settings
+	dconf write /io/github/celluloid-player/celluloid/mpv-config-enable true
+	dconf write /io/github/celluloid-player/celluloid/mpv-config-file "'file://$config1'"
 	dconf write /io/github/celluloid-player/celluloid/mpv-input-config-enable true
 	dconf write /io/github/celluloid-player/celluloid/mpv-input-config-file "'file://$config2'"
-	mkdir -p "$(dirname "$config2")" && cat /dev/null >"$config2"
+	dconf write /io/github/celluloid-player/celluloid/mpv-options "''"
 
 }
 
@@ -374,7 +388,7 @@ main() {
 	printf "\n\033[92m%s\033[00m\n\n" "$welcome"
 
 	# Handle functions
-	factors=@(
+	factors=(
 		"update_system"
 		"update_git"
 		"update_ydotool"

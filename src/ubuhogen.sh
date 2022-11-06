@@ -76,30 +76,32 @@ update_android_studio() {
 	yes | sdkmanager 'build-tools;33.0.0'
 	yes | sdkmanager 'emulator'
 	yes | sdkmanager 'platform-tools'
-	yes | sdkmanager 'platforms;android-32'
 	yes | sdkmanager 'platforms;android-33'
 	yes | sdkmanager 'sources;android-33'
 	yes | sdkmanager 'system-images;android-33;google_apis;x86_64'
-	avdmanager create avd -n 'Pixel_5' -d 'pixel_5' -k 'system-images;android-33;google_apis;x86_64'
+	avdmanager create avd -n 'Pixel_5_API_33' -d 'pixel_5' -k 'system-images;android-33;google_apis;x86_64'
 	if [[ "$present" == "false" ]]; then
 		sleep 1 && (sudo ydotoold &) &>/dev/null
 		sleep 1 && (android-studio &) &>/dev/null
 		# Handle the import dialog
-		sleep 8 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0 # {TAB} + {ENTER}
+		sleep 8 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0
 		# Handle the improve dialog
-		sleep 20 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # {TAB} + {TAB} + {ENTER}
+		sleep 20 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
 		# Handle the wizard window
-		sleep 1 && sudo ydotool key 28:1 28:0 # {ENTER}
-		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # {TAB} + {TAB} + {ENTER}
-		sleep 1 && sudo ydotool key 28:1 28:0 # {ENTER}
-		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0 # {TAB} + {TAB} + {ENTER}
-		sleep 1 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0 # {TAB} + {ENTER}
+		sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0
 		# Handle the finish button
-		sleep 1 && sudo ydotool key 56:1 62:1 62:0 56:0 # {ALT}{F4}
-		sleep 1 && sudo ydotool key 28:1 28:0 && sleep 1 && sudo ydotool key 28:1 28:0 # {ENTER} + {ENTER}
+		sleep 1 && sudo ydotool key 56:1 62:1 62:0 56:0
+		sleep 1 && sudo ydotool key 28:1 28:0 && sleep 1 && sudo ydotool key 28:1 28:0
 		# Finish the latest window
-		sleep 8 && sudo ydotool key 56:1 62:1 62:0 56:0 # {ALT}{F4}
+		sleep 8 && sudo ydotool key 56:1 62:1 62:0 56:0
 	fi
+
+	# TODO: Change project directory
+	# TODO: Change line height
 
 }
 
@@ -183,14 +185,17 @@ update_figma() {
 update_firefox() {
 
 	# Remove package
-	sudo snap remove --purge firefox
+	if which "firefox" | grep -q "snap"; then
+		sudo snap remove --purge firefox && sudo apt -y purge firefox
+		rm -r "$HOME/snap/firefox" &>/dev/null
+	fi
 
 	# Update firefox
-	sudo add-apt-repository -y ppa:mozillateam/ppa
-	configs="/etc/apt/preferences.d/mozillateamppa"
+	configs="/etc/apt/preferences.d/firefox-no-snap"
 	echo "Package: firefox*" | sudo tee "$configs"
-	echo "Pin: release o=LP-PPA-mozillateam" | sudo tee -a "$configs"
-	echo "Pin-Priority: 501" | sudo tee -a "$configs"
+	echo "Pin: release o=Ubuntu*" | sudo tee -a "$configs"
+	echo "Pin-Priority: -1" | sudo tee -a "$configs"
+	sudo add-apt-repository -y ppa:mozillateam/ppa
 	sudo apt update && sudo apt -y install firefox
 
 }
@@ -213,6 +218,9 @@ update_flutter() {
 		echo 'export PATH="$PATH:$HOME/Android/Flutter/bin"' >>"$configs"
 		export PATH="$PATH:$HOME/Android/Flutter/bin"
 	fi
+
+	# TODO: Update android-studio extensions
+	# TODO: Update vscode extensions
 
 	# Change settings
 	flutter config --no-analytics
@@ -247,7 +255,98 @@ update_git() {
 
 update_gnome() {
 
-	return 0
+	# Update dependencies
+	sudo apt -y install curl fonts-cascadia-code jq
+
+	# Change fonts
+	gsettings set org.gnome.desktop.interface font-name "Ubuntu 10"
+	gsettings set org.gnome.desktop.interface document-font-name "Sans 10"
+	gsettings set org.gnome.desktop.interface monospace-font-name "Cascadia Code 10"
+	gsettings set org.gnome.desktop.wm.preferences titlebar-font "Ubuntu Bold 10"
+	gsettings set org.gnome.desktop.wm.preferences titlebar-uses-system-font false
+
+	# Change icons
+	sudo add-apt-repository -y ppa:papirus/papirus-dev
+	sudo apt update && sudo apt -y install papirus-icon-theme
+	gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
+
+	# Change theme
+	gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
+	gsettings set org.gnome.desktop.interface gtk-theme "Yaru-dark"
+	gsettings set org.gnome.gedit.preferences.editor scheme "Yaru-dark"
+
+	# Change terminal
+	profile=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")
+	deposit="org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$profile/"
+	# gsettings set "$deposit" cell-height-scale 1.2500000000000002
+	gsettings set "$deposit" cell-height-scale 1.1000000000000001
+	gsettings set "$deposit" default-size-columns 96
+	gsettings set "$deposit" default-size-rows 24
+	gsettings set "$deposit" font "Cascadia Code 10"
+
+	# Change backgrounds
+	address="https://github.com/sharpordie/andpaper/raw/main/src/android-bottom-darken.png"
+	picture="$HOME/Pictures/Backgrounds/android-bottom-darken.png"
+	mkdir -p "$(dirname $picture)" && curl -Ls "$address" -o "$picture"
+	# gsettings set org.gnome.desktop.background picture-uri "file://$picture"
+	gsettings set org.gnome.desktop.background picture-uri-dark "file://$picture"
+	gsettings set org.gnome.desktop.background picture-options "zoom"
+	gsettings set org.gnome.desktop.screensaver picture-uri "file://$picture"
+	gsettings set org.gnome.desktop.screensaver picture-options "zoom"
+
+	# Change favorites
+	gsettings set org.gnome.shell favorite-apps "[ \
+		'org.gnome.Nautilus.desktop', \
+		'firefox.desktop', \
+		'transmission-gtk.desktop', \
+		'code.desktop', \
+		'org.gnome.Terminal.desktop', \
+		'jetbrains-pycharm.desktop', \
+		'android-studio.desktop', \
+		'figma-linux.desktop', \
+		'io.github.celluloid_player.Celluloid.desktop' \
+	]"
+
+	# Change dash-to-dock
+	gsettings set org.gnome.shell.extensions.dash-to-dock click-action minimize
+	gsettings set org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 32
+	gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed true
+	gsettings set org.gnome.shell.extensions.dash-to-dock show-trash false
+
+	# Change night-light
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-from 0
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-to 0
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-temperature 5000
+
+	# Change nautilus
+	gsettings set org.gnome.nautilus.preferences default-folder-viewer "list-view"
+	gsettings set org.gtk.Settings.FileChooser show-hidden false
+	gsettings set org.gtk.Settings.FileChooser sort-directories-first true
+
+	# Remove home directory
+	gsettings set org.gnome.shell.extensions.ding show-home false
+
+	# Remove is ready notification
+	update_gnome_extension "windowIsReady_Removernunofarrucagmail.com.v19.shell-extension.zip"
+
+}
+
+update_gnome_extension() {
+
+	payload=${1}
+
+	address="https://extensions.gnome.org/extension-data/$payload"
+	archive="$(mktemp -d)/$(basename "$address")"
+	curl -LA "Mozilla/5.0" "$address" -o "$archive"
+	element="$(unzip -c "$archive" metadata.json | grep uuid | cut -d \" -f4)"
+	deposit="$HOME/.local/share/gnome-shell/extensions/$element"
+	if [[ ! -d "$deposit" ]]; then
+		mkdir -p "$deposit"
+		unzip -d "$deposit" "$archive"
+		gnome-shell-extension-tool -e "$element"
+		# gnome-shell --replace &
+	fi
 
 }
 
@@ -257,7 +356,7 @@ update_nodejs() {
 
 	#  Update nodejs
 	curl -fsSL "https://deb.nodesource.com/setup_$version.x" | sudo -E bash -
-	sudo apt-get install -y nodejs
+	sudo apt-get install -y nodejs npm
 
 	# Adjust environment
 	configs="$HOME/.bashrc" && deposit="$HOME/.npm-global"
@@ -266,7 +365,7 @@ update_nodejs() {
 		[[ -s "$configs" ]] || touch "$configs"
 		[[ -z $(tail -1 "$configs") ]] || echo "" >>"$configs"
 		echo 'export PATH="$PATH:$HOME/.npm-global/bin"' >>"$configs"
-		source "$configs"
+		export PATH="$PATH:$HOME/.npm-global/bin"
 	fi
 
 	# Change settings
@@ -316,6 +415,9 @@ update_pycharm() {
 	# if [[ "$present" == "false" ]]; then
 	# fi
 
+	# TODO: Change project directory
+	# TODO: Change line height
+
 }
 
 update_python() {
@@ -323,7 +425,20 @@ update_python() {
 	# Update python
 	sudo apt -y install python3 python3-dev python3-venv
 
+	# Adjust environment
+	configs="$HOME/.bashrc"
+	if ! grep -q "PYTHONDONTWRITEBYTECODE" "$configs" 2>/dev/null; then
+		[[ -s "$configs" ]] || touch "$configs"
+		[[ -z $(tail -1 "$configs") ]] || echo "" >>"$configs"
+		echo 'export PYTHONDONTWRITEBYTECODE=1' >>"$configs"
+		echo 'export PATH="$HOME/.local/bin:$PATH"' >>"$configs"
+		export PYTHONDONTWRITEBYTECODE=1
+		export PATH="$PATH:$HOME/.local/bin"
+	fi
+
 	# Update poetry
+	curl -sSL https://install.python-poetry.org | python3 -
+	poetry config virtualenvs.in-project true
 
 }
 
@@ -335,13 +450,54 @@ update_quickemu() {
 
 update_system() {
 
-	return 0
+	# Update system
+	sudo apt -qq update && sudo apt -y upgrade && sudo apt -y dist-upgrade
+	! grep -q "snap" "$HOME/.hidden" 2>/dev/null && echo "snap" >>"$HOME/.hidden"
+
+	# Change timezone
+	sudo unlink "/etc/localtime"
+	sudo ln -s "/usr/share/zoneinfo/Europe/Brussels" "/etc/localtime"
 
 }
 
 update_vscode() {
 
-	return 0
+	# Update dependencies
+	sudo apt -qy install curl fonts-cascadia-code jq moreutils
+
+	# Update code
+	present="$([[ -x $(command -v code) ]] && echo "true" || echo "false")"
+	if [[ $present == "false" ]]; then
+		package="$(mktemp -d)/code_latest_amd64.deb"
+		address="https://update.code.visualstudio.com/latest/linux-deb-x64/stable"
+		curl -LA -A "mozilla/5.0" "$address" -o "$package"
+		sudo apt -y install "$package"
+	fi
+
+	# Update extensions
+	code --install-extension bierner.markdown-preview-github-styles
+	code --install-extension foxundermoon.shell-format
+	code --install-extension github.github-vscode-theme
+
+	# Change settings
+	configs="$HOME/.config/Code/User/settings.json"
+	[[ -s "$configs" ]] || echo "{}" >"$configs"
+	jq '."editor.fontFamily" = "Cascadia Code, monospace"' "$configs" | sponge "$configs"
+	jq '."editor.fontSize" = 13' "$configs" | sponge "$configs"
+	jq '."editor.lineHeight" = 32' "$configs" | sponge "$configs"
+	jq '."security.workspace.trust.enabled" = false' "$configs" | sponge "$configs"
+	jq '."telemetry.telemetryLevel" = "crash"' "$configs" | sponge "$configs"
+	jq '."update.mode" = "none"' "$configs" | sponge "$configs"
+	jq '."window.menuBarVisibility" = "toggle"' "$configs" | sponge "$configs"
+	jq '."workbench.colorTheme" = "GitHub Dark"' "$configs" | sponge "$configs"
+
+	# Update max_user_watches
+	if ! grep -q "fs.inotify.max_user_watches" "/etc/sysctl.conf" 2>/dev/null; then
+		[[ -z $(tail -1 "/etc/sysctl.conf") ]] || echo "" | sudo tee -a "/etc/sysctl.conf"
+		echo "# Augment the amount of inotify watchers." | sudo tee -a "/etc/sysctl.conf"
+		echo "fs.inotify.max_user_watches=524288" | sudo tee -a "/etc/sysctl.conf"
+		sudo sysctl -p
+	fi
 
 }
 
@@ -388,20 +544,20 @@ main() {
 	# Handle functions
 	factors=(
 		"update_system"
+		"update_gnome"
 		"update_git"
 		"update_ydotool"
 		"update_android_studio"
-		# "update_firefox"
-		# "update_pycharm"
-		# "update_vscode"
-		# "update_docker"
-		# "update_flutter"
-		# "update_nodejs"
-		# "update_python"
-		# "update_celluloid"
-		# "update_figma"
-		# "update_quickemu"
-		# "update_gnome"
+		"update_vscode"
+		"update_celluloid"
+		"update_docker"
+		"update_figma"
+		"update_firefox"
+		"update_flutter"
+		"update_nodejs"
+		"update_pycharm"
+		"update_python"
+		"update_quickemu"
 	)
 
 	# Output progress
@@ -420,11 +576,11 @@ main() {
 		printf "$current" "$written" "$elapsed"
 	done
 
-	# Revert screensaver
-	gsettings set org.gnome.desktop.screensaver lock-enabled true
-
 	# Revert timeout
 	printf "\n" && sudo rm "/etc/sudoers.d/disable_timeout"
+
+	# Revert screensaver
+	gsettings set org.gnome.desktop.screensaver lock-enabled true
 
 }
 

@@ -146,6 +146,17 @@ update_celluloid() {
 
 }
 
+update_chromium() {
+
+	# # Update dependencies
+	sudo apt -y install flatpak
+	sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+	# Update chromium
+	flatpak install -y flathub com.github.Eloston.UngoogledChromium
+
+}
+
 update_docker() {
 
 	# Update dependencies
@@ -295,10 +306,12 @@ update_gnome() {
 	gsettings set org.gnome.desktop.screensaver picture-options "zoom"
 
 	# Change favorites
+	gsettings get org.gnome.shell favorite-apps 
 	gsettings set org.gnome.shell favorite-apps "[ \
 		'org.gnome.Nautilus.desktop', \
+		'com.github.Eloston.UngoogledChromium.desktop', \
 		'firefox.desktop', \
-		'transmission-gtk.desktop', \
+		'org.jdownloader.JDownloader.desktop', \
 		'code.desktop', \
 		'org.gnome.Terminal.desktop', \
 		'jetbrains-pycharm.desktop', \
@@ -347,6 +360,17 @@ update_gnome_extension() {
 		gnome-shell-extension-tool -e "$element"
 		# gnome-shell --replace &
 	fi
+
+}
+
+update_jdownloader() {
+
+	# # Update dependencies
+	sudo apt -y install flatpak
+	sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+	# Update chromium
+	flatpak install -y flathub org.jdownloader.JDownloader
 
 }
 
@@ -543,21 +567,23 @@ main() {
 
 	# Handle functions
 	factors=(
-		"update_system"
+		# "update_system"
 		"update_gnome"
-		"update_git"
-		"update_ydotool"
-		"update_android_studio"
-		"update_vscode"
-		"update_celluloid"
-		"update_docker"
-		"update_figma"
-		"update_firefox"
-		"update_flutter"
-		"update_nodejs"
-		"update_pycharm"
-		"update_python"
-		"update_quickemu"
+		# "update_git"
+		# "update_ydotool"
+		# "update_android_studio"
+		"update_chromium"
+		# "update_vscode"
+		# "update_celluloid"
+		# "update_docker"
+		# "update_figma"
+		# "update_firefox"
+		# "update_flutter"
+		"update_jdownloader"
+		# "update_nodejs"
+		# "update_pycharm"
+		# "update_python"
+		# "update_quickemu"
 	)
 
 	# Output progress

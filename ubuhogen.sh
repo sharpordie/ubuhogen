@@ -244,8 +244,8 @@ update_gh() {
 update_git() {
 
 	default=${1:-main}
-	gitmail=${2:-sharpordie@outlook.com}
-	gituser=${3:-sharpordie}
+	gitmail=${2:-anonymous@example.org}
+	gituser=${3:-anonymous}
 
 	# Update git
 	sudo add-apt-repository -y ppa:git-core/ppa
@@ -610,7 +610,7 @@ main() {
 	# Handle functions
 	factors=(
 		"update_ubuntu"
-		"update_git"
+		"update_git main sharpordie@outlook.com sharpordie"
 		"update_ydotool"
 		"update_android_studio"
 		"update_chromium"

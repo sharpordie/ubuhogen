@@ -73,13 +73,14 @@ update_android_studio() {
 	fi
 
 	# Finish installation
-	yes | sdkmanager 'build-tools;33.0.0'
+	yes | sdkmanager 'build-tools;33.0.1'
 	yes | sdkmanager 'emulator'
 	yes | sdkmanager 'platform-tools'
+	yes | sdkmanager 'platforms;android-32'
 	yes | sdkmanager 'platforms;android-33'
 	yes | sdkmanager 'sources;android-33'
 	yes | sdkmanager 'system-images;android-33;google_apis;x86_64'
-	avdmanager create avd -n 'Pixel_5_API_33' -d 'pixel_5' -k 'system-images;android-33;google_apis;x86_64'
+	avdmanager create avd -n 'Pixel_3_API_33' -d 'pixel_3' -k 'system-images;android-33;google_apis;x86_64'
 	if [[ "$present" == "false" ]]; then
 		sleep 1 && (sudo ydotoold &) &>/dev/null
 		sleep 1 && (android-studio &) &>/dev/null
@@ -193,24 +194,6 @@ update_figma() {
 
 }
 
-update_firefox() {
-
-	# Remove package
-	if which "firefox" | grep -q "snap"; then
-		sudo snap remove --purge firefox && sudo apt -y purge firefox
-		rm -r "$HOME/snap/firefox" &>/dev/null
-	fi
-
-	# Update firefox
-	configs="/etc/apt/preferences.d/firefox-no-snap"
-	echo "Package: firefox*" | sudo tee "$configs"
-	echo "Pin: release o=Ubuntu*" | sudo tee -a "$configs"
-	echo "Pin-Priority: -1" | sudo tee -a "$configs"
-	sudo add-apt-repository -y ppa:mozillateam/ppa
-	sudo apt update && sudo apt -y install firefox
-
-}
-
 update_flutter() {
 
 	# Update dependencies
@@ -242,6 +225,19 @@ update_flutter() {
 
 	# Accept licenses
 	yes | flutter doctor --android-licenses
+
+}
+
+update_gh() {
+
+	# Update dependencies
+	sudo apt -y install curl
+
+	# Update gh
+	curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+	sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+	echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+	sudo apt update && sudo apt install gh -y
 
 }
 
@@ -284,7 +280,6 @@ update_gnome() {
 	# Change theme
 	gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
 	gsettings set org.gnome.desktop.interface gtk-theme "Yaru-dark"
-	gsettings set org.gnome.gedit.preferences.editor scheme "Yaru-dark"
 
 	# Change terminal
 	profile=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")
@@ -504,15 +499,26 @@ update_quickemu() {
 
 }
 
-update_system() {
+update_ubuntu() {
+
+	# Change the hostname.
+	hostnamectl hostname ubuhogen
+
+	# Change timezone
+	sudo unlink "/etc/localtime"
+	sudo ln -s "/usr/share/zoneinfo/Europe/Brussels" "/etc/localtime"
 
 	# Update system
 	sudo apt -qq update && sudo apt -y upgrade && sudo apt -y dist-upgrade
 	! grep -q "snap" "$HOME/.hidden" 2>/dev/null && echo "snap" >>"$HOME/.hidden"
 
-	# Change timezone
-	sudo unlink "/etc/localtime"
-	sudo ln -s "/usr/share/zoneinfo/Europe/Brussels" "/etc/localtime"
+	# Update firmware
+	sudo fwupdmgr get-devices && sudo fwupdmgr refresh --force
+	sudo fwupdmgr get-updates && sudo fwupdmgr update -y
+
+	# Remove firefox
+	sudo snap remove --purge firefox && sudo apt -y purge firefox
+	rm -r "$HOME/snap/firefox" &>/dev/null
 
 }
 
@@ -603,22 +609,25 @@ main() {
 
 	# Handle functions
 	factors=(
-		"update_system"
+		"update_ubuntu"
 		"update_git"
 		"update_ydotool"
 		"update_android_studio"
 		"update_chromium"
 		"update_vscode"
+
 		"update_celluloid"
 		"update_docker"
 		"update_figma"
 		"update_firefox"
 		"update_flutter"
+		"update_gh"
 		"update_jdownloader"
 		"update_nodejs"
 		"update_pycharm"
 		"update_python"
 		"update_quickemu"
+
 		"update_gnome"
 	)
 
@@ -639,7 +648,7 @@ main() {
 	done
 
 	# Revert timeout
-	printf "\n" && sudo rm "/etc/sudoers.d/disable_timeout"
+	sudo rm "/etc/sudoers.d/disable_timeout"
 
 	# Revert screensaver
 	gsettings set org.gnome.desktop.screensaver lock-enabled true
@@ -647,6 +656,9 @@ main() {
 
 	# Revert notifications
 	gsettings set org.gnome.desktop.notifications show-banners true
+
+	# Output newline
+	printf "\n"
 
 }
 

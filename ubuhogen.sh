@@ -575,13 +575,14 @@ update_ydotool() {
 main() {
 
 	# Prompt password
-	clear && sudo -v
+	sudo -v && clear
 
 	# Remove timeout
 	echo "Defaults timestamp_timeout=-1" | sudo tee "/etc/sudoers.d/disable_timeout" &>/dev/null
 
 	# Remove screensaver
 	gsettings set org.gnome.desktop.screensaver lock-enabled false
+	gsettings set org.gnome.desktop.session idle-delay 0
 
 	# Remove notifications
 	gsettings set org.gnome.desktop.notifications show-banners false
@@ -603,7 +604,6 @@ main() {
 	# Handle functions
 	factors=(
 		"update_system"
-		"update_gnome"
 		"update_git"
 		"update_ydotool"
 		"update_android_studio"
@@ -619,6 +619,7 @@ main() {
 		"update_pycharm"
 		"update_python"
 		"update_quickemu"
+		"update_gnome"
 	)
 
 	# Output progress
@@ -642,6 +643,7 @@ main() {
 
 	# Revert screensaver
 	gsettings set org.gnome.desktop.screensaver lock-enabled true
+	gsettings set org.gnome.desktop.session idle-delay 300
 
 	# Revert notifications
 	gsettings set org.gnome.desktop.notifications show-banners true

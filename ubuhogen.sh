@@ -290,7 +290,7 @@ update_gnome() {
 	gsettings set "$deposit" default-size-rows 24
 	gsettings set "$deposit" font "Cascadia Code 10"
 
-	# Change backgrounds
+	# Change desktop background
 	address="https://github.com/sharpordie/andpaper/raw/main/src/android-bottom-darken.png"
 	picture="$HOME/Pictures/Backgrounds/android-bottom-darken.png"
 	mkdir -p "$(dirname $picture)" && curl -Ls "$address" -o "$picture"

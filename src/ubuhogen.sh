@@ -247,7 +247,7 @@ update_flutter() {
 
 update_git() {
 
-	default=${1:-master}
+	default=${1:-main}
 	gitmail=${2:-sharpordie@outlook.com}
 	gituser=${3:-sharpordie}
 
@@ -349,28 +349,59 @@ update_gnome_extension() {
 
 	payload=${1}
 
+	# Update extension
 	address="https://extensions.gnome.org/extension-data/$payload"
 	archive="$(mktemp -d)/$(basename "$address")"
-	curl -LA "Mozilla/5.0" "$address" -o "$archive"
+	usagent="Mozilla/5.0"
+	curl -LA "$usagent" "$address" -o "$archive"
 	element="$(unzip -c "$archive" metadata.json | grep uuid | cut -d \" -f4)"
 	deposit="$HOME/.local/share/gnome-shell/extensions/$element"
 	if [[ ! -d "$deposit" ]]; then
 		mkdir -p "$deposit"
 		unzip -d "$deposit" "$archive"
 		gnome-shell-extension-tool -e "$element"
-		# gnome-shell --replace &
 	fi
 
 }
 
 update_jdownloader() {
 
-	# # Update dependencies
-	sudo apt -y install flatpak
+	deposit=${1:-$HOME/Downloads/JD2}
+
+	# Update dependencies
+	sudo apt -y install flatpak jq moreutils
 	sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
-	# Update chromium
-	flatpak install -y flathub org.jdownloader.JDownloader
+	# Update jdownloader
+	flatpak install --assumeyes flathub org.jdownloader.JDownloader
+
+	# Create deposit
+	mkdir -p "$deposit"
+
+	# Change desktop
+	desktop="/var/lib/flatpak/exports/share/applications/org.jdownloader.JDownloader.desktop"
+	sudo sed -i 's/Icon=.*/Icon=jdownloader/' "$desktop"
+
+	# Change settings
+	appdata="$HOME/.var/app/org.jdownloader.JDownloader/data/jdownloader"
+	config1="$appdata/cfg/org.jdownloader.settings.GraphicalUserInterfaceSettings.json"
+	config2="$appdata/cfg/org.jdownloader.settings.GeneralSettings.json"
+	config3="$appdata/cfg/org.jdownloader.gui.jdtrayicon.TrayExtension.json"
+	(flatpak run org.jdownloader.JDownloader >/dev/null 2>&1 &) && sleep 8
+	while [[ ! -f "$config1" ]]; do sleep 2; done
+	flatpak kill org.jdownloader.JDownloader && sleep 8
+	jq '.bannerenabled = false' "$config1" | sponge "$config1"
+	jq '.donatebuttonlatestautochange = 4102444800000' "$config1" | sponge "$config1"
+	jq '.donatebuttonstate = "AUTO_HIDDEN"' "$config1" | sponge "$config1"
+	jq '.myjdownloaderviewvisible = false' "$config1" | sponge "$config1"
+	jq '.premiumalertetacolumnenabled = false' "$config1" | sponge "$config1"
+	jq '.premiumalertspeedcolumnenabled = false' "$config1" | sponge "$config1"
+	jq '.premiumalerttaskcolumnenabled = false' "$config1" | sponge "$config1"
+	jq '.specialdealoboomdialogvisibleonstartup = false' "$config1" | sponge "$config1"
+	jq '.specialdealsenabled = false' "$config1" | sponge "$config1"
+	jq '.speedmetervisible = false' "$config1" | sponge "$config1"
+	jq ".defaultdownloadfolder = \"$deposit\"" "$config2" | sponge "$config2"
+	jq '.enabled = false' "$config3" | sponge "$config3"
 
 }
 
@@ -378,7 +409,7 @@ update_nodejs() {
 
 	version=${1:-16}
 
-	#  Update nodejs
+	# Update nodejs
 	curl -fsSL "https://deb.nodesource.com/setup_$version.x" | sudo -E bash -
 	sudo apt-get install -y nodejs npm
 
@@ -412,7 +443,8 @@ update_pycharm() {
 	if [[ "$present" == "false" ]]; then
 		address="https://download.jetbrains.com/python/pycharm-professional-$version.tar.gz"
 		package="$(mktemp -d)/$(basename "$address")"
-		curl -LA "Mozilla/5.0" "$address" -o "$package"
+		usagent="Mozilla/5.0"
+		curl -LA "$usagent" "$address" -o "$package"
 		sudo rm -r "/opt/pycharm"
 		sudo tar -zxvf "$package" -C "/opt"
 		sudo mv /opt/pycharm-* "/opt/pycharm"
@@ -487,7 +519,7 @@ update_system() {
 update_vscode() {
 
 	# Update dependencies
-	sudo apt -qy install curl fonts-cascadia-code jq moreutils
+	sudo apt -y install curl fonts-cascadia-code jq moreutils
 
 	# Update code
 	present="$([[ -x $(command -v code) ]] && echo "true" || echo "false")"
@@ -499,9 +531,9 @@ update_vscode() {
 	fi
 
 	# Update extensions
-	code --install-extension bierner.markdown-preview-github-styles
-	code --install-extension foxundermoon.shell-format
-	code --install-extension github.github-vscode-theme
+	code --install-extension bierner.markdown-preview-github-styles --force
+	code --install-extension foxundermoon.shell-format --force
+	code --install-extension github.github-vscode-theme --force
 
 	# Change settings
 	configs="$HOME/.config/Code/User/settings.json"
@@ -543,13 +575,16 @@ update_ydotool() {
 main() {
 
 	# Prompt password
-	sudo -v && clear
+	clear && sudo -v
 
 	# Remove timeout
 	echo "Defaults timestamp_timeout=-1" | sudo tee "/etc/sudoers.d/disable_timeout" &>/dev/null
 
 	# Remove screensaver
 	gsettings set org.gnome.desktop.screensaver lock-enabled false
+
+	# Remove notifications
+	gsettings set org.gnome.desktop.notifications show-banners false
 
 	# Change title
 	printf "\033]0;%s\007" "ubuhogen"
@@ -567,23 +602,23 @@ main() {
 
 	# Handle functions
 	factors=(
-		# "update_system"
+		"update_system"
 		"update_gnome"
-		# "update_git"
-		# "update_ydotool"
-		# "update_android_studio"
+		"update_git"
+		"update_ydotool"
+		"update_android_studio"
 		"update_chromium"
-		# "update_vscode"
-		# "update_celluloid"
-		# "update_docker"
-		# "update_figma"
-		# "update_firefox"
-		# "update_flutter"
+		"update_vscode"
+		"update_celluloid"
+		"update_docker"
+		"update_figma"
+		"update_firefox"
+		"update_flutter"
 		"update_jdownloader"
-		# "update_nodejs"
-		# "update_pycharm"
-		# "update_python"
-		# "update_quickemu"
+		"update_nodejs"
+		"update_pycharm"
+		"update_python"
+		"update_quickemu"
 	)
 
 	# Output progress
@@ -607,6 +642,9 @@ main() {
 
 	# Revert screensaver
 	gsettings set org.gnome.desktop.screensaver lock-enabled true
+
+	# Revert notifications
+	gsettings set org.gnome.desktop.notifications show-banners true
 
 }
 

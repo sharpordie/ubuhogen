@@ -106,6 +106,86 @@ update_android_studio() {
 
 }
 
+update_appearance() {
+
+	# Update dependencies
+	sudo apt -y install curl fonts-cascadia-code jq
+
+	# Change fonts
+	gsettings set org.gnome.desktop.interface font-name "Ubuntu 10"
+	gsettings set org.gnome.desktop.interface document-font-name "Sans 10"
+	gsettings set org.gnome.desktop.interface monospace-font-name "Cascadia Code 10"
+	gsettings set org.gnome.desktop.wm.preferences titlebar-font "Ubuntu Bold 10"
+	gsettings set org.gnome.desktop.wm.preferences titlebar-uses-system-font false
+
+	# Change icons
+	sudo add-apt-repository -y ppa:papirus/papirus-dev
+	sudo apt update && sudo apt -y install papirus-icon-theme
+	gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
+
+	# Change theme
+	gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
+	gsettings set org.gnome.desktop.interface gtk-theme "Yaru-dark"
+
+	# Change terminal
+	profile=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")
+	deposit="org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$profile/"
+	# gsettings set "$deposit" cell-height-scale 1.2500000000000002
+	gsettings set "$deposit" cell-height-scale 1.1000000000000001
+	gsettings set "$deposit" default-size-columns 96
+	gsettings set "$deposit" default-size-rows 24
+	gsettings set "$deposit" font "Cascadia Code 10"
+
+	# Change desktop background
+	address="https://github.com/sharpordie/andpaper/raw/main/src/android-bottom-darken.png"
+	picture="$HOME/Pictures/Backgrounds/android-bottom-darken.png"
+	mkdir -p "$(dirname $picture)" && curl -Ls "$address" -o "$picture"
+	# gsettings set org.gnome.desktop.background picture-uri "file://$picture"
+	gsettings set org.gnome.desktop.background picture-uri-dark "file://$picture"
+	gsettings set org.gnome.desktop.background picture-options "zoom"
+	gsettings set org.gnome.desktop.screensaver picture-uri "file://$picture"
+	gsettings set org.gnome.desktop.screensaver picture-options "zoom"
+
+	# Change favorites
+	gsettings get org.gnome.shell favorite-apps 
+	gsettings set org.gnome.shell favorite-apps "[ \
+		'org.gnome.Nautilus.desktop', \
+		'com.github.Eloston.UngoogledChromium.desktop', \
+		'firefox.desktop', \
+		'org.jdownloader.JDownloader.desktop', \
+		'code.desktop', \
+		'org.gnome.Terminal.desktop', \
+		'jetbrains-pycharm.desktop', \
+		'android-studio.desktop', \
+		'figma-linux.desktop', \
+		'io.github.celluloid_player.Celluloid.desktop' \
+	]"
+
+	# Change dash-to-dock
+	gsettings set org.gnome.shell.extensions.dash-to-dock click-action minimize
+	gsettings set org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 32
+	gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed true
+	gsettings set org.gnome.shell.extensions.dash-to-dock show-trash false
+
+	# Change night-light
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-from 0
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-to 0
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-temperature 5000
+
+	# Change nautilus
+	gsettings set org.gnome.nautilus.preferences default-folder-viewer "list-view"
+	gsettings set org.gtk.Settings.FileChooser show-hidden false
+	gsettings set org.gtk.Settings.FileChooser sort-directories-first true
+
+	# Remove home directory
+	gsettings set org.gnome.shell.extensions.ding show-home false
+
+	# Remove is ready notification
+	update_gnome_extension "windowIsReady_Removernunofarrucagmail.com.v19.shell-extension.zip"
+
+}
+
 update_celluloid() {
 
 	# Update celluloid
@@ -257,86 +337,6 @@ update_git() {
 	git config --global init.defaultBranch "$default"
 	git config --global user.email "$gitmail"
 	git config --global user.name "$gituser"
-
-}
-
-update_gnome() {
-
-	# Update dependencies
-	sudo apt -y install curl fonts-cascadia-code jq
-
-	# Change fonts
-	gsettings set org.gnome.desktop.interface font-name "Ubuntu 10"
-	gsettings set org.gnome.desktop.interface document-font-name "Sans 10"
-	gsettings set org.gnome.desktop.interface monospace-font-name "Cascadia Code 10"
-	gsettings set org.gnome.desktop.wm.preferences titlebar-font "Ubuntu Bold 10"
-	gsettings set org.gnome.desktop.wm.preferences titlebar-uses-system-font false
-
-	# Change icons
-	sudo add-apt-repository -y ppa:papirus/papirus-dev
-	sudo apt update && sudo apt -y install papirus-icon-theme
-	gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
-
-	# Change theme
-	gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
-	gsettings set org.gnome.desktop.interface gtk-theme "Yaru-dark"
-
-	# Change terminal
-	profile=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")
-	deposit="org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$profile/"
-	# gsettings set "$deposit" cell-height-scale 1.2500000000000002
-	gsettings set "$deposit" cell-height-scale 1.1000000000000001
-	gsettings set "$deposit" default-size-columns 96
-	gsettings set "$deposit" default-size-rows 24
-	gsettings set "$deposit" font "Cascadia Code 10"
-
-	# Change desktop background
-	address="https://github.com/sharpordie/andpaper/raw/main/src/android-bottom-darken.png"
-	picture="$HOME/Pictures/Backgrounds/android-bottom-darken.png"
-	mkdir -p "$(dirname $picture)" && curl -Ls "$address" -o "$picture"
-	# gsettings set org.gnome.desktop.background picture-uri "file://$picture"
-	gsettings set org.gnome.desktop.background picture-uri-dark "file://$picture"
-	gsettings set org.gnome.desktop.background picture-options "zoom"
-	gsettings set org.gnome.desktop.screensaver picture-uri "file://$picture"
-	gsettings set org.gnome.desktop.screensaver picture-options "zoom"
-
-	# Change favorites
-	gsettings get org.gnome.shell favorite-apps 
-	gsettings set org.gnome.shell favorite-apps "[ \
-		'org.gnome.Nautilus.desktop', \
-		'com.github.Eloston.UngoogledChromium.desktop', \
-		'firefox.desktop', \
-		'org.jdownloader.JDownloader.desktop', \
-		'code.desktop', \
-		'org.gnome.Terminal.desktop', \
-		'jetbrains-pycharm.desktop', \
-		'android-studio.desktop', \
-		'figma-linux.desktop', \
-		'io.github.celluloid_player.Celluloid.desktop' \
-	]"
-
-	# Change dash-to-dock
-	gsettings set org.gnome.shell.extensions.dash-to-dock click-action minimize
-	gsettings set org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 32
-	gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed true
-	gsettings set org.gnome.shell.extensions.dash-to-dock show-trash false
-
-	# Change night-light
-	gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true
-	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-from 0
-	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-to 0
-	gsettings set org.gnome.settings-daemon.plugins.color night-light-temperature 5000
-
-	# Change nautilus
-	gsettings set org.gnome.nautilus.preferences default-folder-viewer "list-view"
-	gsettings set org.gtk.Settings.FileChooser show-hidden false
-	gsettings set org.gtk.Settings.FileChooser sort-directories-first true
-
-	# Remove home directory
-	gsettings set org.gnome.shell.extensions.ding show-home false
-
-	# Remove is ready notification
-	update_gnome_extension "windowIsReady_Removernunofarrucagmail.com.v19.shell-extension.zip"
 
 }
 
@@ -610,10 +610,11 @@ main() {
 	# Handle functions
 	factors=(
 		"update_ubuntu"
-		"update_git main sharpordie@outlook.com sharpordie"
 		"update_ydotool"
+
 		"update_android_studio"
 		"update_chromium"
+		"update_git main sharpordie@outlook.com sharpordie"
 		"update_vscode"
 
 		"update_celluloid"
@@ -628,7 +629,7 @@ main() {
 		"update_python"
 		"update_quickemu"
 
-		"update_gnome"
+		"update_appearance"
 	)
 
 	# Output progress
@@ -662,4 +663,4 @@ main() {
 
 }
 
-main "$@"
+main

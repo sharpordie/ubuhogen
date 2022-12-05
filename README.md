@@ -6,7 +6,7 @@
 
 <h2><samp>OVERVIEW</samp></h2>
 
-Opiniated post-installation script for Ubuntu 22.10.
+Personal post-installation script for Ubuntu 22.10.
 
 <h2><samp>IGNITION</samp></h2>
 

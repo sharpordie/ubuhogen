@@ -4,16 +4,16 @@
 <p>Configuration Script for Ubuntu</p>
 </div><hr>
 
-## `OVERVIEW`
+<h2><samp>OVERVIEW</samp></h2>
 
 Opiniated post-installation script for Ubuntu 22.10.
 
-## `IGNITION`
+<h2><samp>IGNITION</samp></h2>
 
 ```shell
 wget -qO- https://raw.githubusercontent.com/sharpordie/ubuhogen/HEAD/ubuhogen.sh | bash
 ```
 
-## `PICTURES`
+<h2><samp>PICTURES</samp></h2>
 
 <a href=""><img src="https://fakeimg.pl/852x480/273445/fff/?text=‏‏‎ ‎" width="49%"/></a><a><img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/1x1.png" width="2%"/></a><a href=""><img src="https://fakeimg.pl/852x480/273445/fff/?text=‏‏‎ ‎" width="49%"/></a>

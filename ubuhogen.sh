@@ -495,7 +495,25 @@ update_python() {
 
 update_quickemu() {
 
-	return 0
+	# Update quickemu
+	sudo add-apt-repository -y ppa:flexiondotorg/quickemu
+	sudo apt update && sudo apt -y install quickemu
+
+	# Create macos vm
+	current=$(dirname "$(readlink -f "$0")") && deposit="$HOME/Machines"
+	mkdir -p "$deposit" && cd "$deposit" && quickget macos monterey
+	quickemu --vm macos-monterey.conf --shortcut && cd "$current"
+	desktop="$HOME/.local/share/applications/macos-monterey.desktop"
+	sed -i "s/Icon=.*/Icon=distributor-logo-mac/" "$desktop"
+	sed -i "s/Name=.*/Name=Monterey/" "$desktop"
+
+	# Create windows vm
+	current=$(dirname "$(readlink -f "$0")") && deposit="$HOME/Machines"
+	mkdir -p "$deposit" && cd "$deposit" && quickget windows 11
+	quickemu --vm windows-11.conf --shortcut && cd "$current"
+	desktop="$HOME/.local/share/applications/windows-11.desktop"
+	sed -i "s/Icon=.*/Icon=windows95/" "$desktop"
+	sed -i "s/Name=.*/Name=Windows/" "$desktop"
 
 }
 

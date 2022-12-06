@@ -288,9 +288,6 @@ update_appearance() {
 	# Remove home directory
 	gsettings set org.gnome.shell.extensions.ding show-home false
 
-	# Remove is ready notification
-	update_gnome_extension "windowIsReady_Removernunofarrucagmail.com.v19.shell-extension.zip"
-
 }
 
 update_celluloid() {
@@ -447,25 +444,6 @@ update_git() {
 
 }
 
-update_gnome_extension() {
-
-	payload=${1}
-
-	# Update extension
-	address="https://extensions.gnome.org/extension-data/$payload"
-	archive="$(mktemp -d)/$(basename "$address")"
-	usagent="Mozilla/5.0"
-	curl -LA "$usagent" "$address" -o "$archive"
-	element="$(unzip -c "$archive" metadata.json | grep uuid | cut -d \" -f4)"
-	deposit="$HOME/.local/share/gnome-shell/extensions/$element"
-	if [[ ! -d "$deposit" ]]; then
-		mkdir -p "$deposit"
-		unzip -d "$deposit" "$archive"
-		gnome-shell-extension-tool -e "$element"
-	fi
-
-}
-
 update_jdownloader() {
 
 	deposit=${1:-$HOME/Downloads/JD2}
@@ -606,21 +584,21 @@ update_quickemu() {
 	sudo add-apt-repository -y ppa:flexiondotorg/quickemu
 	sudo apt update && sudo apt -y install quickemu
 
-	# Create macos vm
-	current=$(dirname "$(readlink -f "$0")") && deposit="$HOME/Machines"
-	mkdir -p "$deposit" && cd "$deposit" && quickget macos monterey
-	quickemu --vm macos-monterey.conf --shortcut && cd "$current"
-	desktop="$HOME/.local/share/applications/macos-monterey.desktop"
-	sed -i "s/Icon=.*/Icon=distributor-logo-mac/" "$desktop"
-	sed -i "s/Name=.*/Name=Monterey/" "$desktop"
+	# # Create macos vm
+	# current=$(dirname "$(readlink -f "$0")") && deposit="$HOME/Machines"
+	# mkdir -p "$deposit" && cd "$deposit" && quickget macos monterey
+	# quickemu --vm macos-monterey.conf --shortcut && cd "$current"
+	# desktop="$HOME/.local/share/applications/macos-monterey.desktop"
+	# sed -i "s/Icon=.*/Icon=distributor-logo-mac/" "$desktop"
+	# sed -i "s/Name=.*/Name=Monterey/" "$desktop"
 
-	# Create windows vm
-	current=$(dirname "$(readlink -f "$0")") && deposit="$HOME/Machines"
-	mkdir -p "$deposit" && cd "$deposit" && quickget windows 11
-	quickemu --vm windows-11.conf --shortcut && cd "$current"
-	desktop="$HOME/.local/share/applications/windows-11.desktop"
-	sed -i "s/Icon=.*/Icon=windows95/" "$desktop"
-	sed -i "s/Name=.*/Name=Windows/" "$desktop"
+	# # Create windows vm
+	# current=$(dirname "$(readlink -f "$0")") && deposit="$HOME/Machines"
+	# mkdir -p "$deposit" && cd "$deposit" && quickget windows 11
+	# quickemu --vm windows-11.conf --shortcut && cd "$current"
+	# desktop="$HOME/.local/share/applications/windows-11.desktop"
+	# sed -i "s/Icon=.*/Icon=windows95/" "$desktop"
+	# sed -i "s/Name=.*/Name=Windows/" "$desktop"
 
 }
 

@@ -3,7 +3,7 @@
 update_android_studio() {
 
 	# Update dependencies
-	sudo apt -y install curl
+	sudo apt -y install bridge-utils curl libvirt-clients libvirt-daemon-system qemu-kvm
 
 	# Update android-studio
 	website="https://developer.android.com/studio#downloads"
@@ -15,7 +15,8 @@ update_android_studio() {
 		package="$(mktemp -d)/$(basename "$address")"
 		curl -LA "Mozilla/5.0" "$address" -o "$package"
 		sudo rm -r "/opt/android-studio"
-		sudo tar -zxvf "$package" -C "/opt"
+		tempdir="$(mktemp -d)" && sudo tar -xvf "$package" -C "$tempdir"
+		sudo mv -f "$tempdir/android-studio" "/opt/android-studio"
 		sudo ln -fs "/opt/android-studio/bin/studio.sh" "/bin/android-studio"
 		source "$HOME/.bashrc"
 	fi
@@ -72,7 +73,7 @@ update_android_studio() {
 		export PATH="$PATH:$ANDROID_HOME/platform-tools"
 	fi
 
-	# Finish installation
+	# Update sdk
 	yes | sdkmanager 'build-tools;33.0.1'
 	yes | sdkmanager 'emulator'
 	yes | sdkmanager 'platform-tools'
@@ -81,6 +82,8 @@ update_android_studio() {
 	yes | sdkmanager 'sources;android-33'
 	yes | sdkmanager 'system-images;android-33;google_apis;x86_64'
 	avdmanager create avd -n 'Pixel_3_API_33' -d 'pixel_3' -k 'system-images;android-33;google_apis;x86_64'
+
+	# Finish installation
 	if [[ "$present" == "false" ]]; then
 		sleep 1 && (sudo ydotoold &) &>/dev/null
 		sleep 1 && (android-studio &) &>/dev/null
@@ -101,8 +104,112 @@ update_android_studio() {
 		sleep 8 && sudo ydotool key 56:1 62:1 62:0 56:0
 	fi
 
-	# TODO: Change project directory
-	# TODO: Change line height
+}
+
+update_android_studio_preview() {
+
+	# Update dependencies
+	sudo apt -y install bridge-utils curl libvirt-clients libvirt-daemon-system qemu-kvm
+
+	# Update android-studio-preview
+	website="https://aur.archlinux.org/packages/android-studio-canary"
+	pattern="android-studio-canary \K(\d.+)(?=-)"
+	version=$(curl -s "$website" | grep -oP "$pattern" | head -1)
+	present=$([[ -x $(command -v android-studio-preview) ]] && echo "true" || echo "false")
+	if [[ $present == false ]]; then
+		address="https://dl.google.com/dl/android/studio/ide-zips/$version/android-studio-$version-linux.tar.gz"
+		package="$(mktemp -d)/$(basename "$address")"
+		curl -LA "Mozilla/5.0" "$address" -o "$package"
+		sudo rm -r "/opt/android-studio-preview"
+		tempdir="$(mktemp -d)" && sudo tar -xvf "$package" -C "$tempdir"
+		sudo mv -f "$tempdir/android-studio" "/opt/android-studio-preview"
+		sudo ln -fs "/opt/android-studio-preview/bin/studio.sh" "/bin/android-studio-preview"
+		source "$HOME/.bashrc"
+	fi
+
+	# Create desktop
+	sudo rm "/usr/share/applications/jetbrains-studio.desktop"
+	desktop="/usr/share/applications/android-studio-preview.desktop"
+	cat /dev/null | sudo tee "$desktop"
+	echo "[Desktop Entry]" | sudo tee -a "$desktop"
+	echo "Version=1.0" | sudo tee -a "$desktop"
+	echo "Type=Application" | sudo tee -a "$desktop"
+	echo "Name=Android Studio Preview" | sudo tee -a "$desktop"
+	echo "Icon=androidstudio-preview" | sudo tee -a "$desktop"
+	echo 'Exec="/opt/android-studio-preview/bin/studio.sh" %f' | sudo tee -a "$desktop"
+	echo "Comment=The Drive to Develop" | sudo tee -a "$desktop"
+	echo "Categories=Development;IDE;" | sudo tee -a "$desktop"
+	echo "Terminal=false" | sudo tee -a "$desktop"
+	echo "StartupWMClass=jetbrains-studio" | sudo tee -a "$desktop"
+	echo "StartupNotify=true" | sudo tee -a "$desktop"
+
+	# Update cmdline-tools
+	cmdline="$HOME/Android/Sdk/cmdline-tools"
+	if [[ ! -d $cmdline ]]; then
+		mkdir -p "$cmdline"
+		website="https://developer.android.com/studio#command-tools"
+		pattern="commandlinetools-win-\K(\d+)"
+		version="$(curl -s "$website" | grep -oP "$pattern" | head -1)"
+		address="https://dl.google.com/android/repository"
+		address="$address/commandlinetools-linux-${version}_latest.zip"
+		archive="$(mktemp -d)/$(basename "$address")"
+		curl -LA "Mozilla/5.0" "$address" -o "$archive"
+		unzip -d "$cmdline" "$archive"
+		jdkhome="/opt/android-studio-preview/jbr"
+		manager="$cmdline/cmdline-tools/bin/sdkmanager"
+		export JAVA_HOME="$jdkhome" && yes | $manager "cmdline-tools;latest"
+		rm -rf "$cmdline/cmdline-tools"
+	fi
+
+	# Adjust environment
+	configs="$HOME/.bashrc"
+	if ! grep -q "ANDROID_HOME" "$configs" 2>/dev/null; then
+		[[ -s "$configs" ]] || touch "$configs"
+		[[ -z $(tail -1 "$configs") ]] || echo "" >>"$configs"
+		echo 'export ANDROID_HOME="$HOME/Android/Sdk"' >>"$configs"
+		echo 'export JAVA_HOME="/opt/android-studio-preview/jbr"' >>"$configs"
+		echo 'export PATH="$PATH:$JAVA_HOME/bin"' >>"$configs"
+		echo 'export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin"' >>"$configs"
+		echo 'export PATH="$PATH:$ANDROID_HOME/emulator"' >>"$configs"
+		echo 'export PATH="$PATH:$ANDROID_HOME/platform-tools"' >>"$configs"
+		export ANDROID_HOME="$HOME/Android/Sdk"
+		export JAVA_HOME="/opt/android-studio-preview/jbr"
+		export PATH="$PATH:$JAVA_HOME/bin"
+		export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin"
+		export PATH="$PATH:$ANDROID_HOME/emulator"
+		export PATH="$PATH:$ANDROID_HOME/platform-tools"
+	fi
+
+	# Update sdk
+	yes | sdkmanager 'build-tools;33.0.1'
+	yes | sdkmanager 'emulator'
+	yes | sdkmanager 'platform-tools'
+	yes | sdkmanager 'platforms;android-32'
+	yes | sdkmanager 'platforms;android-33'
+	yes | sdkmanager 'sources;android-33'
+	yes | sdkmanager 'system-images;android-33;google_apis;x86_64'
+	avdmanager create avd -n 'Pixel_3_API_33' -d 'pixel_3' -k 'system-images;android-33;google_apis;x86_64'
+
+	# Finish installation
+	if [[ "$present" == "false" ]]; then
+		sleep 1 && (sudo ydotoold &) &>/dev/null
+		sleep 1 && (android-studio-preview &) &>/dev/null
+		# Handle the import dialog
+		sleep 8 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0
+		# Handle the improve dialog
+		sleep 20 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+		# Handle the wizard window
+		sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0
+		# Handle the finish button
+		sleep 1 && sudo ydotool key 56:1 62:1 62:0 56:0
+		sleep 1 && sudo ydotool key 28:1 28:0 && sleep 1 && sudo ydotool key 28:1 28:0
+		# Finish the latest window
+		sleep 8 && sudo ydotool key 56:1 62:1 62:0 56:0
+	fi
 
 }
 
@@ -147,7 +254,7 @@ update_appearance() {
 	gsettings set org.gnome.desktop.screensaver picture-options "zoom"
 
 	# Change favorites
-	gsettings get org.gnome.shell favorite-apps 
+	gsettings get org.gnome.shell favorite-apps
 	gsettings set org.gnome.shell favorite-apps "[ \
 		'org.gnome.Nautilus.desktop', \
 		'com.github.Eloston.UngoogledChromium.desktop', \
@@ -316,7 +423,7 @@ update_gh() {
 	# Update gh
 	curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
 	sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
-	echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+	echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
 	sudo apt update && sudo apt install gh -y
 
 }
@@ -535,8 +642,10 @@ update_ubuntu() {
 	sudo fwupdmgr get-updates && sudo fwupdmgr update -y
 
 	# Remove firefox
-	sudo snap remove --purge firefox && sudo apt -y purge firefox
-	rm -r "$HOME/snap/firefox" &>/dev/null
+	if which "firefox" | grep -q "snap"; then
+		sudo snap remove --purge firefox && sudo apt -y purge firefox
+		rm -r "$HOME/snap/firefox" &>/dev/null
+	fi
 
 }
 
@@ -550,7 +659,7 @@ update_vscode() {
 	if [[ $present == "false" ]]; then
 		package="$(mktemp -d)/code_latest_amd64.deb"
 		address="https://update.code.visualstudio.com/latest/linux-deb-x64/stable"
-		curl -LA -A "mozilla/5.0" "$address" -o "$package"
+		curl -LA "mozilla/5.0" "$address" -o "$package"
 		sudo apt -y install "$package"
 	fi
 
@@ -569,12 +678,12 @@ update_vscode() {
 	jq '."telemetry.telemetryLevel" = "crash"' "$configs" | sponge "$configs"
 	jq '."update.mode" = "none"' "$configs" | sponge "$configs"
 	jq '."window.menuBarVisibility" = "toggle"' "$configs" | sponge "$configs"
-	jq '."workbench.colorTheme" = "GitHub Dark"' "$configs" | sponge "$configs"
+	jq '."workbench.colorTheme" = "GitHub Dark Default"' "$configs" | sponge "$configs"
 
 	# Update max_user_watches
 	if ! grep -q "fs.inotify.max_user_watches" "/etc/sysctl.conf" 2>/dev/null; then
 		[[ -z $(tail -1 "/etc/sysctl.conf") ]] || echo "" | sudo tee -a "/etc/sysctl.conf"
-		echo "# Augment the amount of inotify watchers." | sudo tee -a "/etc/sysctl.conf"
+		echo "# Augment the amount of inotify watchers" | sudo tee -a "/etc/sysctl.conf"
 		echo "fs.inotify.max_user_watches=524288" | sudo tee -a "/etc/sysctl.conf"
 		sudo sysctl -p
 	fi
@@ -630,7 +739,8 @@ main() {
 		"update_ubuntu"
 		"update_ydotool"
 
-		"update_android_studio"
+		# "update_android_studio"
+		"update_android_studio_preview"
 		"update_chromium"
 		"update_git main sharpordie@outlook.com sharpordie"
 		"update_vscode"
@@ -638,7 +748,6 @@ main() {
 		"update_celluloid"
 		"update_docker"
 		"update_figma"
-		"update_firefox"
 		"update_flutter"
 		"update_gh"
 		"update_jdownloader"
@@ -658,7 +767,7 @@ main() {
 	success="\r%-"$((maximum - 20))"s   \033[92mWORKED\033[0m   %-8s\n"
 	printf "$heading" "FUNCTION" "STATUS" "DURATION"
 	for element in "${factors[@]}"; do
-		written=$(basename "$(echo "$element" | cut -d '"' -f 1)" | tr "[:lower:]" "[:upper:]")
+		written=$(basename "$(echo "$element" | cut -d ' ' -f 1)" | tr "[:lower:]" "[:upper:]")
 		started=$(date +"%s") && printf "$loading" "$written" "--:--:--"
 		eval "$element" >/dev/null 2>&1 && current="$success" || current="$failure"
 		extinct=$(date +"%s") && elapsed=$((extinct - started))

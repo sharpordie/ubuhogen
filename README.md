@@ -4,7 +4,7 @@
 <p>Configuration Script for Ubuntu</p>
 <hr></div>-->
 
-<div><h1><samp>UBUHOGEN</samp></h1></div>
+<h1>UBUHOGEN</h1>
 
 Personal post-installation script for Ubuntu 22.10.
 

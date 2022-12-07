@@ -274,6 +274,9 @@ update_appearance() {
 	gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed true
 	gsettings set org.gnome.shell.extensions.dash-to-dock show-trash false
 
+	# Change mouse speed
+	gsettings set org.gnome.desktop.peripherals.mouse speed -1.0
+
 	# Change night-light
 	gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true
 	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-from 0

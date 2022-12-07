@@ -1,8 +1,8 @@
-<hr><div>
+<div><hr><div>
 <a href="../.."><img align="right" height="91" src="https://user-images.githubusercontent.com/72373746/205007538-288ee5cb-16e8-413c-b557-8433dfaba34d.png"></a>
 <h1>UBUHOGEN</h1>
 <p>Configuration Script for Ubuntu</p>
-</div><hr>
+</div><hr><div>
 
 <h2><samp>OVERVIEW</samp></h2>
 

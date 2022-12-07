@@ -488,6 +488,14 @@ update_jdownloader() {
 
 }
 
+update_keepassxc() {
+
+	# Update keepassxc
+	sudo add-apt-repository -y ppa:phoerious/keepassxc
+	sudo apt update && sudo apt -y install keepassxc
+
+}
+
 update_nodejs() {
 
 	version=${1:-16}
@@ -732,6 +740,7 @@ main() {
 		"update_flutter"
 		"update_gh"
 		"update_jdownloader"
+		"update_keepassxc"
 		"update_nodejs"
 		"update_pycharm"
 		"update_python"

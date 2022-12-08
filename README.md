@@ -1,3 +1,4 @@
+<!--
 <div><hr>
 <a href="../.."><img align="right" height="91" src="https://user-images.githubusercontent.com/72373746/205007538-288ee5cb-16e8-413c-b557-8433dfaba34d.png"></a>
 <h1>UBUHOGEN</h1>
@@ -7,8 +8,9 @@
 ## <samp>FUNDINGS</samp>
 
 <a href="../.." target="_blank"><img src="https://raw.githubusercontent.com/sharpordie/mybadges/main/src/kofi.svg"></a>
+-->
 
-## <samp>OVERVIEW</samp>
+# <samp>UBUHOGEN</samp>
 
 Opinionated configuration script for Ubuntu 22.10.
 

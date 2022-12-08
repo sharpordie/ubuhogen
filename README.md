@@ -18,10 +18,6 @@ Personal post-installation script for Ubuntu 22.10.
 wget -qO- https://raw.githubusercontent.com/sharpordie/ubuhogen/HEAD/ubuhogen.sh | bash
 ```
 
-## <samp>PICTURES</samp>
-
-<a href=""><img src="https://fakeimg.pl/852x480/273445/fff/?text=‏‏‎ ‎" width="49%"/></a><img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/1x1.png" width="2%"/><a href=""><img src="https://fakeimg.pl/852x480/273445/fff/?text=‏‏‎ ‎" width="49%"/></a>
-
 ## <samp>RELATION</samp>
 
 <table>
@@ -42,3 +38,7 @@ wget -qO- https://raw.githubusercontent.com/sharpordie/ubuhogen/HEAD/ubuhogen.sh
     <td>Configuration Script for Windows</td>
   </tr>
 </table>
+
+## <samp>PICTURES</samp>
+
+<a href=""><img src="https://fakeimg.pl/852x480/273445/fff/?text=‏‏‎ ‎" width="49%"/></a><img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/1x1.png" width="2%"/><a href=""><img src="https://fakeimg.pl/852x480/273445/fff/?text=‏‏‎ ‎" width="49%"/></a>

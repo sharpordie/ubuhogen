@@ -12,7 +12,7 @@
 
 Personal post-installation script for Ubuntu 22.10.
 
-## <samp>IGNITION</samp>
+## <samp>LAUNCHER</samp>
 
 ```shell
 wget -qO- https://raw.githubusercontent.com/sharpordie/ubuhogen/HEAD/ubuhogen.sh | bash

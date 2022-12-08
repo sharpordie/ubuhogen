@@ -10,7 +10,7 @@
 
 ## <samp>OVERVIEW</samp>
 
-Personal post-installation script for Ubuntu 22.10.
+Opinionated configuration script for Ubuntu 22.10.
 
 ## <samp>LAUNCHER</samp>
 

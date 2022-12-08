@@ -4,13 +4,13 @@
 <p>Configuration Script for Ubuntu</p>
 <hr></div>
 
-## <samp>OVERVIEW</samp>
-
-Personal post-installation script for Ubuntu 22.10.
-
 ## <samp>FUNDINGS</samp>
 
 <a href="../.." target="_blank"><img src="https://raw.githubusercontent.com/sharpordie/mybadges/main/src/kofi.svg"></a><img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/1x1.png" width="2%"/><a href="../.." target="_blank"><img src="https://raw.githubusercontent.com/sharpordie/mybadges/main/src/patreon.svg"></a>
+
+## <samp>OVERVIEW</samp>
+
+Personal post-installation script for Ubuntu 22.10.
 
 ## <samp>IGNITION</samp>
 

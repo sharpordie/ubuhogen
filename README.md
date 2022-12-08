@@ -18,27 +18,6 @@ Personal post-installation script for Ubuntu 22.10.
 wget -qO- https://raw.githubusercontent.com/sharpordie/ubuhogen/HEAD/ubuhogen.sh | bash
 ```
 
-## <samp>RELATION</samp>
-
-<table>
-  <tr align="left">
-    <th>Name</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td><samp><a href="https">MACHOGEN</a></samp></td>
-    <td>Configuration Script for macOS</td>
-  </tr>
-  <tr>
-    <td width="500"><samp><a href="https">SHIHOGEN</a></samp></td>
-    <td width="9999">Configuration Script for Shield</td>
-  </tr>
-  <tr>
-    <td><samp><a href="https">WINHOGEN</a></samp></td>
-    <td>Configuration Script for Windows</td>
-  </tr>
-</table>
-
 ## <samp>PICTURES</samp>
 
 <a href=""><img src="https://fakeimg.pl/852x480/273445/fff/?text=‏‏‎ ‎" width="49%"/></a><img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/1x1.png" width="2%"/><a href=""><img src="https://fakeimg.pl/852x480/273445/fff/?text=‏‏‎ ‎" width="49%"/></a>

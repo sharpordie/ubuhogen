@@ -14,12 +14,12 @@
 
 Opinionated configuration script for Ubuntu 22.10.
 
+## <samp>SHOWCASE</samp>
+
+<a href=""><img src="https://fakeimg.pl/852x480/273445/fff/?text=‏‏‎ ‎" width="49%"/></a><img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/1x1.png" width="2%"/><a href=""><img src="https://fakeimg.pl/852x480/273445/fff/?text=‏‏‎ ‎" width="49%"/></a>
+
 ## <samp>LAUNCHER</samp>
 
 ```shell
 wget -qO- https://raw.githubusercontent.com/sharpordie/ubuhogen/HEAD/ubuhogen.sh | bash
 ```
-
-## <samp>SHOWCASE</samp>
-
-<a href=""><img src="https://fakeimg.pl/852x480/273445/fff/?text=‏‏‎ ‎" width="49%"/></a><img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/1x1.png" width="2%"/><a href=""><img src="https://fakeimg.pl/852x480/273445/fff/?text=‏‏‎ ‎" width="49%"/></a>

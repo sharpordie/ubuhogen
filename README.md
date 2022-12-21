@@ -4,7 +4,7 @@ Opinionated configuration script for Ubuntu 22.10.
 
 ## <samp>PREVIEW</samp>
 
-<samp><img src="https://fakeimg.pl/852x480/273445/fff/?text=‏‏‎ ‎" width="49.5%"/><img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/1x1.png" width="1%"/><img src="https://fakeimg.pl/852x480/273445/fff/?text=‏‏‎ ‎" width="49.5%"/></samp>
+<img src="https://fakeimg.pl/852x480/273445/fff/?text=‏‏‎ ‎" width="49.5%"/><img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/1x1.png" width="1%"/><img src="https://fakeimg.pl/852x480/273445/fff/?text=‏‏‎ ‎" width="49.5%"/>
 
 ## <samp>STARTER</samp>
 

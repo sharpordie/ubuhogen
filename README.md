@@ -4,6 +4,8 @@ Opinionated configuration script for Ubuntu 22.10.
 
 **One Command Execution**
 
+Running this command blindly is strongly discouraged.
+
 ```shell
 wget -qO- https://raw.githubusercontent.com/sharpordie/ubuhogen/HEAD/ubuhogen.sh | bash
 ```

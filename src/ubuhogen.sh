@@ -537,6 +537,28 @@ update_keepassxc() {
 
 }
 
+update_mambaforge() {
+
+	# Handle adjunct
+	deposit=${1:-$HOME/.mambaforge}
+
+	# Update package
+	present=$([[ -x "$(which mamba)" ]] && echo true || echo false)
+	if [[ $present = false ]]; then
+		address="https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
+		fetched="$(mktemp -d)/$(basename "$address")"
+		curl -L "$address" -o "$fetched" && sh "$fetched" -b -p "$deposit"
+	fi
+
+	# Change environ
+	"$deposit/condabin/conda" init
+	"$deposit/condabin/mamba" init
+
+	# Change configs
+	"$deposit/condabin/conda" config --set auto_activate_base false
+
+}
+
 update_nodejs() {
 
 	version=${1:-16}

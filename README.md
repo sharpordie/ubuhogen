@@ -11,5 +11,5 @@ Opinionated post-installation script for Ubuntu 22.04.
 Running this blindly is strongly discouraged.
 
 ```shell
-wget -qO- https://raw.githubusercontent.com/sharpordie/ubuhogen/HEAD/src/ubuhogen.sh | bash
+wget -qO- https://raw.githubusercontent.com/sharpordie/ubuhogen/HEAD/src/essentials.sh | bash
 ```

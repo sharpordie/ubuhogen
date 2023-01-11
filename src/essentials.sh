@@ -1,18 +1,145 @@
 #!/usr/bin/env bash
 
+update_android_cmdline() {
+
+	# Update dependencies
+	sudo apt install -y default-jdk
+
+	# Update package
+	sdkroot="$HOME/.android/sdk"
+	deposit="$sdkroot/cmdline-tools"
+	if [[ ! -d $deposit ]]; then
+		mkdir -p "$deposit"
+		website="https://developer.android.com/studio#command-tools"
+		version="$(curl -s "$website" | grep -oP "commandlinetools-linux-\K(\d+)" | head -1)"
+		address="https://dl.google.com/android/repository/commandlinetools-linux-${version}_latest.zip"
+		archive="$(mktemp -d)/$(basename "$address")"
+		curl -LA "Mozilla/5.0" "$address" -o "$archive"
+		unzip -d "$deposit" "$archive"
+		yes | "$deposit/cmdline-tools/bin/sdkmanager" --sdk_root="$sdkroot" "cmdline-tools;latest"
+		rm -rf "$deposit/cmdline-tools"
+	fi
+
+	# Change environment
+	configs="$HOME/.bashrc"
+	if ! grep -q "ANDROID_HOME" "$configs" 2>/dev/null; then
+		[[ -s "$configs" ]] || touch "$configs"
+		[[ -z $(tail -1 "$configs") ]] || echo "" >>"$configs"
+		echo 'export ANDROID_HOME="$HOME/.android/sdk"' >>"$configs"
+		echo 'export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin"' >>"$configs"
+		echo 'export PATH="$PATH:$ANDROID_HOME/emulator"' >>"$configs"
+		echo 'export PATH="$PATH:$ANDROID_HOME/platform-tools"' >>"$configs"
+		export ANDROID_HOME="$HOME/.android/sdk"
+		export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin"
+		export PATH="$PATH:$ANDROID_HOME/emulator"
+		export PATH="$PATH:$ANDROID_HOME/platform-tools"
+	fi
+
+}
+
+update_android_studio() {
+
+	# Handle parameters
+	release=${1:-beta}
+	deposit=${2:-$HOME/Projects}
+
+	# Update dependencies
+	sudo apt install -y bridge-utils curl libvirt-clients libvirt-daemon-system qemu-kvm
+
+	# Update package
+	[[ $release = sta* || $release = bet* || $release = can* ]] || return 1
+	[[ $release = sta* ]] && payload="android-studio"
+	[[ $release = bet* ]] && payload="android-studio-beta"
+	[[ $release = can* ]] && payload="android-studio-canary"
+	address="https://aur.archlinux.org/packages/$payload"
+	version=$(curl -s "$address" | grep -oP "android-studio.* \K(\d.+)(?=-)" | head -1)
+	current=$(cat "/opt/$payload/product-info.json" | jq -r ".dataDirectoryName" | grep -oP "(\d.+)" || echo "0.0.0.0")
+	present=$([[ -f "/opt/$payload/bin/studio.sh" ]] && echo true || echo false)
+	updated=$(dpkg --compare-versions "$current" "ge" "${version:0:6}" && echo true || echo false)
+	if [[ $updated == false ]]; then
+		address="https://dl.google.com/dl/android/studio/ide-zips/$version/android-studio-$version-linux.tar.gz"
+		package="$(mktemp -d)/$(basename "$address")"
+		curl -LA "Mozilla/5.0" "$address" -o "$package"
+		sudo rm -r "/opt/$payload"
+		tempdir="$(mktemp -d)" && sudo tar -xvf "$package" -C "$tempdir"
+		sudo mv -f "$tempdir/android-studio" "/opt/$payload"
+		sudo ln -fs "/opt/$payload/bin/studio.sh" "/bin/$payload"
+		source "$HOME/.bashrc"
+	fi
+
+	# Create desktop
+	sudo rm "/usr/share/applications/jetbrains-studio.desktop"
+	desktop="/usr/share/applications/$payload.desktop"
+	cat /dev/null | sudo tee "$desktop"
+	echo "[Desktop Entry]" | sudo tee -a "$desktop"
+	echo "Version=1.0" | sudo tee -a "$desktop"
+	echo "Type=Application" | sudo tee -a "$desktop"
+	echo "Name=Android Studio" | sudo tee -a "$desktop"
+	echo "Icon=androidstudio" | sudo tee -a "$desktop"
+	echo "Exec=\"/opt/$payload/bin/studio.sh\" %f" | sudo tee -a "$desktop"
+	echo "Comment=The Drive to Develop" | sudo tee -a "$desktop"
+	echo "Categories=Development;IDE;" | sudo tee -a "$desktop"
+	echo "Terminal=false" | sudo tee -a "$desktop"
+	echo "StartupWMClass=jetbrains-studio" | sudo tee -a "$desktop"
+	echo "StartupNotify=true" | sudo tee -a "$desktop"
+	[[ $release = bet* ]] && sudo sed -i "s/Name=.*/Name=Android Studio Beta/" "$desktop"
+	[[ $release = can* ]] && sudo sed -i "s/Icon=.*/Icon=androidstudio-canary/" "$desktop"
+	[[ $release = can* ]] && sudo sed -i "s/Name=.*/Name=Android Studio Canary/" "$desktop"
+
+	# TODO: Change settings
+	# update_jetbrains_config "Android" "directory" "$deposit"
+	# update_jetbrains_config "Android" "font_size" "14"
+	# update_jetbrains_config "Android" "line_size" "1.5"
+	# [[ $release = can* ]] && update_jetbrains_config "AndroidPreview" "newest_ui" "true"
+
+	# Finish installation
+	if [[ $present == false ]]; then
+		update_android_cmdline || return 1
+		[[ $release = sta* ]] && channel=0
+		[[ $release = bet* ]] && channel=1
+		[[ $release = can* ]] && channel=2
+		yes | sdkmanager --channel=$channel "build-tools;33.0.1"
+		yes | sdkmanager --channel=$channel "emulator"
+		yes | sdkmanager --channel=$channel "emulator"
+		yes | sdkmanager --channel=$channel "patcher;v4"
+		yes | sdkmanager --channel=$channel "platform-tools"
+		yes | sdkmanager --channel=$channel "platforms;android-33"
+		yes | sdkmanager --channel=$channel "platforms;android-33-ext4"
+		yes | sdkmanager --channel=$channel "sources;android-33"
+		yes | sdkmanager --channel=$channel "system-images;android-33;google_apis;x86_64"
+		yes | sdkmanager --channel=$channel --licenses
+		avdmanager create avd -n "Pixel_3_API_33" -d "pixel_3" -k "system-images;android-33;google_apis;x86_64" -f
+		update_ydotool || return 1
+		gsettings set org.gnome.desktop.notifications show-banners false
+		sleep 1 && (sudo ydotoold &) &>/dev/null
+		sleep 1 && ($payload &) &>/dev/null
+		sleep 8 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 20 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool key 56:1 62:1 62:0 56:0
+		sleep 1 && sudo ydotool key 28:1 28:0 && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 8 && sudo ydotool key 56:1 62:1 62:0 56:0
+	fi
+
+}
+
 update_appearance() {
 
 	# Change fonts
-	sudo apt -y install fonts-cascadia-code
+	sudo apt install -y fonts-cascadia-code
 	gsettings set org.gnome.desktop.interface font-name "Ubuntu 10"
 	gsettings set org.gnome.desktop.interface document-font-name "Sans 10"
-	gsettings set org.gnome.desktop.interface monospace-font-name "Cascadia Mono PL Semi-Bold 10"
+	gsettings set org.gnome.desktop.interface monospace-font-name "Ubuntu Mono 12"
 	gsettings set org.gnome.desktop.wm.preferences titlebar-font "Ubuntu Bold 10"
 	gsettings set org.gnome.desktop.wm.preferences titlebar-uses-system-font false
 
 	# Change icons
 	sudo add-apt-repository -y ppa:papirus/papirus-dev
-	sudo apt update && sudo apt -y install papirus-folders papirus-icon-theme
+	sudo apt update && sudo apt install -y papirus-folders papirus-icon-theme
 	gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
 	sudo papirus-folders --color yaru --theme Papirus-Dark
 
@@ -23,7 +150,6 @@ update_appearance() {
 	# Change terminal
 	profile=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")
 	deposit="org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$profile/"
-	# gsettings set "$deposit" cell-height-scale 1.2500000000000002
 	gsettings set "$deposit" cell-height-scale 1.1000000000000001
 	gsettings set "$deposit" default-size-columns 96
 	gsettings set "$deposit" default-size-rows 24
@@ -33,7 +159,6 @@ update_appearance() {
 
 	# Change desktop
 	sudo apt install -y curl
-	# address="https://github.com/sharpordie/andpaper/raw/main/src/android-bottom-darken.png"
 	address="https://raw.githubusercontent.com/sharpordie/odoowall/master/src/odoo-higher-darken.png"
 	picture="$HOME/Pictures/Backgrounds/$(basename "$address")"
 	mkdir -p "$(dirname $picture)" && curl -L "$address" -o "$picture"
@@ -81,6 +206,103 @@ update_appearance() {
 
 }
 
+update_flutter() {
+
+	# Update dependencies
+	sudo apt -y install build-essential clang cmake curl git libgtk-3-dev ninja-build pkg-config
+
+	# Update package
+	deposit="$HOME/.android/flutter" && mkdir -p "$deposit"
+	git clone "https://github.com/flutter/flutter.git" -b stable "$deposit"
+
+	# Adjust environment
+	configs="$HOME/.bashrc"
+	if ! grep -q "flutter" "$configs" 2>/dev/null; then
+		[[ -s "$configs" ]] || touch "$configs"
+		[[ -z $(tail -1 "$configs") ]] || echo "" >>"$configs"
+		echo 'export PATH="$PATH:$HOME/.android/flutter/bin"' >>"$configs"
+		export PATH="$PATH:$HOME/.android/flutter/bin"
+	fi
+
+	# Finish installation
+	flutter channel stable
+	flutter precache && flutter upgrade
+	dart --disable-analytics
+	flutter config --no-analytics
+	yes | flutter doctor --android-licenses
+
+	# Update android-studio
+	product=$(find /opt/android-*/product-info.json -maxdepth 0 2>/dev/null | sort -r | head -1)
+	release=$(cat "$product" | jq -r ".buildNumber" | grep -oP "(\d.+)")	
+	version=$(cat "$product" | jq -r ".dataDirectoryName" | grep -oP "(\d.+)")
+	deposit="$HOME/.local/share/Google/AndroidStudio$version"
+	update_jetbrains_plugin "$deposit" "$release" "6351" # Dart
+	update_jetbrains_plugin "$deposit" "$release" "9212" # Flutter
+	update_jetbrains_plugin "$deposit" "$release" "13666" # Flutter Intl
+
+	# Update vscode
+	present=$([[ -x "$(which code)" ]] && echo true || echo false)
+	if [[ $present == false ]]; then
+		code --install-extension "dart-code.flutter" &>/dev/null
+		code --install-extension "RichardCoutts.mvvm-plus" &>/dev/null
+	fi
+
+}
+
+update_jetbrains_plugin() {
+
+	# Handle parameters
+	deposit=${1}
+	release=${2}
+	element=${3}
+
+	# Update dependencies
+	[[ -n "$release" ]] || return 0
+	sudo apt install -y curl jq
+
+	# Update plugin
+	for i in {0..19}; do
+		address="https://plugins.jetbrains.com/api/plugins/$element/updates"
+		maximum=$(curl -s "$address" | jq ".[$i].until" | tr -d '"' | sed "s/\.\*/\.9999/")
+		minimum=$(curl -s "$address" | jq ".[$i].since" | tr -d '"' | sed "s/\.\*/\.9999/")
+		if dpkg --compare-versions "${minimum:-0000}" "le" "$release" && dpkg --compare-versions "$release" "le" "${maximum:-9999}"; then
+			address=$(curl -s "$address" | jq ".[$i].file" | tr -d '"')
+			address="https://plugins.jetbrains.com/files/$address"
+			mkdir -p "$deposit"
+			archive="$(mktemp -d)/$(basename "$address")"
+			curl -LA "Mozilla/5.0" "$address" -o "$archive"
+			unzip -o "$archive" -d "$deposit"
+			break
+		fi
+		sleep 1
+	done
+
+}
+
+update_nvidia() {
+
+	# Update package
+	[[ $(lspci | grep -e VGA) == *"NVIDIA"* ]] || return 1
+	sudo apt update && sudo apt upgrade -y
+	sudo apt update && sudo apt install -y nvidia-driver
+
+}
+
+update_nvidia_cuda() {
+
+	# Update dependencies
+	[[ $(lspci | grep -e VGA) == *"NVIDIA"* ]] || return 1
+	sudo apt install -y apt-transport-https ca-certificates curl dirmngr dkms software-properties-common
+
+	# Update package
+	address="https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/3bf863cc.pub"
+	curl -fSsL "$address" | sudo gpg --dearmor | sudo tee /usr/share/keyrings/nvidia-drivers.gpg >/dev/null 2>&1
+	content="deb [signed-by=/usr/share/keyrings/nvidia-drivers.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /"
+	echo "$content" | sudo tee /etc/apt/sources.list.d/nvidia-drivers.list
+	sudo apt update && sudo apt install -y cuda
+
+}
+
 update_system() {
 
 	# Handle parameters
@@ -94,16 +316,30 @@ update_system() {
 	sudo unlink "/etc/localtime"
 	sudo ln -s "/usr/share/zoneinfo/$country" "/etc/localtime"
 
-	# # Update system
+	# Update system
 	sudo apt update
-	sudo apt -y upgrade
-	sudo apt -y dist-upgrade
+	# sudo apt upgrade -y
+	# sudo apt dist-upgrade -y
+	# sudo apt autoremove -y
 
 	# # Update firmware
-	sudo fwupdmgr get-devices
-	sudo fwupdmgr refresh --force
-	sudo fwupdmgr get-updates
-	sudo fwupdmgr update -y
+	# sudo fwupdmgr get-devices
+	# sudo fwupdmgr refresh --force
+	# sudo fwupdmgr get-updates
+	# sudo fwupdmgr update -y
+
+}
+
+update_ydotool() {
+
+	# Update dependencies
+	sudo apt install -y build-essential cmake git libboost-program-options-dev scdoc
+
+	# Update package
+	sudo apt autoremove -y --purge ydotool
+	current=$(dirname "$(readlink -f "$0")") && git clone "https://github.com/ReimuNotMoe/ydotool.git"
+	cd ydotool && mkdir build && cd build && cmake .. && make && sudo make install
+	cd "$current" && source "$HOME/.bashrc" && rm -rf ydotool
 
 }
 
@@ -136,8 +372,12 @@ main() {
 
 	# Handle elements
 	factors=(
-		# "update_system"
+		"update_system"
 		"update_appearance"
+		"update_nvidia"
+		"update_android_studio"
+		"update_nvidia_cuda"
+		"update_flutter"
 	)
 
 	# Output progress

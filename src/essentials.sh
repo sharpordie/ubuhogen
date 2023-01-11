@@ -2,24 +2,24 @@
 
 update_appearance() {
 
-    # Change fonts
-    sudo apt -y install fonts-cascadia-code
+	# Change fonts
+	sudo apt -y install fonts-cascadia-code
 	gsettings set org.gnome.desktop.interface font-name "Ubuntu 10"
 	gsettings set org.gnome.desktop.interface document-font-name "Sans 10"
 	gsettings set org.gnome.desktop.interface monospace-font-name "Cascadia Mono PL Semi-Bold 10"
 	gsettings set org.gnome.desktop.wm.preferences titlebar-font "Ubuntu Bold 10"
 	gsettings set org.gnome.desktop.wm.preferences titlebar-uses-system-font false
 
-    # Change icons
+	# Change icons
 	sudo add-apt-repository -y ppa:papirus/papirus-dev
 	sudo apt update && sudo apt -y install papirus-icon-theme
 	gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
 
-    # Change theme
+	# Change theme
 	gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
 	gsettings set org.gnome.desktop.interface gtk-theme "Yaru-dark"
 
-    # Change terminal
+	# Change terminal
 	profile=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")
 	deposit="org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$profile/"
 	# gsettings set "$deposit" cell-height-scale 1.2500000000000002
@@ -28,8 +28,8 @@ update_appearance() {
 	gsettings set "$deposit" default-size-rows 24
 	# gsettings set "$deposit" font "Cascadia Code 10"
 
-    # Change desktop
-    sudo apt install -y curl
+	# Change desktop
+	sudo apt install -y curl
 	address="https://github.com/sharpordie/andpaper/raw/main/src/android-bottom-darken.png"
 	picture="$HOME/Pictures/Backgrounds/android-bottom-darken.png"
 	mkdir -p "$(dirname $picture)" && curl -L "$address" -o "$picture"
@@ -37,63 +37,63 @@ update_appearance() {
 	gsettings set org.gnome.desktop.background picture-uri-dark "file://$picture"
 	gsettings set org.gnome.desktop.background picture-options "zoom"
 
-    # Change screensaver
+	# Change screensaver
 	gsettings set org.gnome.desktop.screensaver picture-uri "file://$picture"
 	gsettings set org.gnome.desktop.screensaver picture-options "zoom"
 
-    # Change login
-    sudo apt install -y libglib2.0-dev-bin
-    address="https://github.com/PRATAP-KUMAR/ubuntu-gdm-set-background/archive/main.tar.gz"
-    element="ubuntu-gdm-set-background-main/ubuntu-gdm-set-background"
-    wget -qO - "$address" | tar zx --strip-components=1 "$element"
-    sudo ./ubuntu-gdm-set-background --image "$picture" || rm ./ubuntu-gdm-set-background
+	# Change login
+	sudo apt install -y libglib2.0-dev-bin
+	address="https://github.com/PRATAP-KUMAR/ubuntu-gdm-set-background/archive/main.tar.gz"
+	element="ubuntu-gdm-set-background-main/ubuntu-gdm-set-background"
+	wget -qO - "$address" | tar zx --strip-components=1 "$element"
+	sudo ./ubuntu-gdm-set-background --image "$picture" || rm ./ubuntu-gdm-set-background
 
-    # Change favorites
+	# Change favorites
 	gsettings set org.gnome.shell favorite-apps "[]"
 
-    # Change dock-to-dock
+	# Change dock-to-dock
 	gsettings set org.gnome.shell.extensions.dash-to-dock click-action minimize
 	gsettings set org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 32
 	gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed true
 	gsettings set org.gnome.shell.extensions.dash-to-dock show-trash false
 
-    # Change night-light
+	# Change night-light
 	gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true
 	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-from 0
 	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-to 0
 	gsettings set org.gnome.settings-daemon.plugins.color night-light-temperature 5000
 
-    # Remove home directory
+	# Remove home directory
 	gsettings set org.gnome.shell.extensions.ding show-home false
 
-    # Remove snap directory
-    ! grep -q "snap" "$HOME/.hidden" 2>/dev/null && echo "snap" >>"$HOME/.hidden"
+	# Remove snap directory
+	! grep -q "snap" "$HOME/.hidden" 2>/dev/null && echo "snap" >>"$HOME/.hidden"
 
 }
 
 update_system() {
 
-    # Handle adjunct
+	# Handle adjunct
 	country=${1:-Europe/Brussels}
 	machine=${2:-ubuhogen}
 
-    # Change hostname
+	# Change hostname
 	hostnamectl hostname "$machine"
 
 	# Change timezone
 	sudo unlink "/etc/localtime"
 	sudo ln -s "/usr/share/zoneinfo/$country" "/etc/localtime"
 
-    # # Update system
+	# # Update system
 	# sudo apt update
-    # sudo apt -y upgrade
-    # sudo apt -y dist-upgrade
+	# sudo apt -y upgrade
+	# sudo apt -y dist-upgrade
 
-    # # Update firmware
+	# # Update firmware
 	# sudo fwupdmgr get-devices
-    # sudo fwupdmgr refresh --force
+	# sudo fwupdmgr refresh --force
 	# sudo fwupdmgr get-updates
-    # sudo fwupdmgr update -y
+	# sudo fwupdmgr update -y
 
 }
 

@@ -231,15 +231,6 @@ update_flutter() {
 	flutter config --no-analytics
 	yes | flutter doctor --android-licenses
 
-	# Update android-studio
-	product=$(find /opt/android-*/product-info.json -maxdepth 0 2>/dev/null | sort -r | head -1)
-	release=$(cat "$product" | jq -r ".buildNumber" | grep -oP "(\d.+)")	
-	version=$(cat "$product" | jq -r ".dataDirectoryName" | grep -oP "(\d.+)")
-	deposit="$HOME/.local/share/Google/AndroidStudio$version"
-	update_jetbrains_plugin "$deposit" "$release" "6351" # Dart
-	update_jetbrains_plugin "$deposit" "$release" "9212" # Flutter
-	update_jetbrains_plugin "$deposit" "$release" "13666" # Flutter Intl
-
 	# Update vscode
 	present=$([[ -x "$(which code)" ]] && echo true || echo false)
 	if [[ $present == false ]]; then
@@ -247,20 +238,30 @@ update_flutter() {
 		code --install-extension "RichardCoutts.mvvm-plus" &>/dev/null
 	fi
 
+	# Update android-studio
+	product=$(find /opt/android-* -maxdepth 0 2>/dev/null | sort -r | head -1)
+	update_jetbrains_plugin "$product" "6351"  # dart
+	update_jetbrains_plugin "$product" "9212"  # flutter
+	update_jetbrains_plugin "$product" "13666" # flutter-intl
+	update_jetbrains_plugin "$product" "14641" # flutter-riverpod-snippets
+
 }
 
 update_jetbrains_plugin() {
 
 	# Handle parameters
 	deposit=${1}
-	release=${2}
-	element=${3}
+	element=${2}
 
 	# Update dependencies
-	[[ -n "$release" ]] || return 0
+	[[ -d "$deposit" ]] || return 0
 	sudo apt install -y curl jq
 
 	# Update plugin
+	release=$(cat "$deposit/product-info.json" | jq -r ".buildNumber" | grep -oP "(\d.+)")
+	datadir=$(cat "$deposit/product-info.json" | jq -r ".dataDirectoryName")
+	adjunct=$([[ $datadir == "AndroidStudio"* ]] && echo "Google/$datadir" || "JetBrains/$datadir")
+	plugins="$HOME/.local/share/$adjunct" && mkdir -p "$plugins"
 	for i in {0..19}; do
 		address="https://plugins.jetbrains.com/api/plugins/$element/updates"
 		maximum=$(curl -s "$address" | jq ".[$i].until" | tr -d '"' | sed "s/\.\*/\.9999/")
@@ -268,10 +269,9 @@ update_jetbrains_plugin() {
 		if dpkg --compare-versions "${minimum:-0000}" "le" "$release" && dpkg --compare-versions "$release" "le" "${maximum:-9999}"; then
 			address=$(curl -s "$address" | jq ".[$i].file" | tr -d '"')
 			address="https://plugins.jetbrains.com/files/$address"
-			mkdir -p "$deposit"
 			archive="$(mktemp -d)/$(basename "$address")"
 			curl -LA "Mozilla/5.0" "$address" -o "$archive"
-			unzip -o "$archive" -d "$deposit"
+			unzip -o "$archive" -d "$plugins"
 			break
 		fi
 		sleep 1
@@ -376,8 +376,8 @@ main() {
 		"update_appearance"
 		"update_nvidia"
 		"update_android_studio"
-		"update_nvidia_cuda"
 		"update_flutter"
+		"update_nvidia_cuda"
 	)
 
 	# Output progress

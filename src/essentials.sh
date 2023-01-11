@@ -12,8 +12,7 @@ update_appearance() {
 
     # Change icons
 	sudo add-apt-repository -y ppa:papirus/papirus-dev
-	sudo apt update
-    sudo apt -y install papirus-icon-theme
+	sudo apt update && sudo apt -y install papirus-icon-theme
 	gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
 
     # Change theme
@@ -33,8 +32,7 @@ update_appearance() {
     sudo apt install -y curl
 	address="https://github.com/sharpordie/andpaper/raw/main/src/android-bottom-darken.png"
 	picture="$HOME/Pictures/Backgrounds/android-bottom-darken.png"
-	mkdir -p "$(dirname $picture)"
-    curl -L "$address" -o "$picture"
+	mkdir -p "$(dirname $picture)" && curl -L "$address" -o "$picture"
 	# gsettings set org.gnome.desktop.background picture-uri "file://$picture"
 	gsettings set org.gnome.desktop.background picture-uri-dark "file://$picture"
 	gsettings set org.gnome.desktop.background picture-options "zoom"
@@ -48,10 +46,27 @@ update_appearance() {
     address="https://github.com/PRATAP-KUMAR/ubuntu-gdm-set-background/archive/main.tar.gz"
     element="ubuntu-gdm-set-background-main/ubuntu-gdm-set-background"
     wget -qO - "$address" | tar zx --strip-components=1 "$element"
-    sudo ./ubuntu-gdm-set-background --image "$picture"
-    rm ./ubuntu-gdm-set-background
+    sudo ./ubuntu-gdm-set-background --image "$picture" || rm ./ubuntu-gdm-set-background
 
-    # Vanish snap directory
+    # Change favorites
+	gsettings set org.gnome.shell favorite-apps "[]"
+
+    # Change dock-to-dock
+	gsettings set org.gnome.shell.extensions.dash-to-dock click-action minimize
+	gsettings set org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 32
+	gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed true
+	gsettings set org.gnome.shell.extensions.dash-to-dock show-trash false
+
+    # Change night-light
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-from 0
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-to 0
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-temperature 5000
+
+    # Remove home directory
+	gsettings set org.gnome.shell.extensions.ding show-home false
+
+    # Remove snap directory
     ! grep -q "snap" "$HOME/.hidden" 2>/dev/null && echo "snap" >>"$HOME/.hidden"
 
 }
@@ -69,16 +84,16 @@ update_system() {
 	sudo unlink "/etc/localtime"
 	sudo ln -s "/usr/share/zoneinfo/$country" "/etc/localtime"
 
-    # Update system
-	sudo apt -qq update
-    sudo apt -y upgrade
-    sudo apt -y dist-upgrade
+    # # Update system
+	# sudo apt update
+    # sudo apt -y upgrade
+    # sudo apt -y dist-upgrade
 
-    # Update firmware
-	sudo fwupdmgr get-devices
-    sudo fwupdmgr refresh --force
-	sudo fwupdmgr get-updates
-    sudo fwupdmgr update -y
+    # # Update firmware
+	# sudo fwupdmgr get-devices
+    # sudo fwupdmgr refresh --force
+	# sudo fwupdmgr get-updates
+    # sudo fwupdmgr update -y
 
 }
 

@@ -12,8 +12,9 @@ update_appearance() {
 
 	# Change icons
 	sudo add-apt-repository -y ppa:papirus/papirus-dev
-	sudo apt update && sudo apt -y install papirus-icon-theme
+	sudo apt update && sudo apt -y install papirus-folders papirus-icon-theme
 	gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
+	sudo papirus-folders --color yaru --theme Papirus-Dark
 
 	# Change theme
 	gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
@@ -26,12 +27,15 @@ update_appearance() {
 	gsettings set "$deposit" cell-height-scale 1.1000000000000001
 	gsettings set "$deposit" default-size-columns 96
 	gsettings set "$deposit" default-size-rows 24
-	# gsettings set "$deposit" font "Cascadia Code 10"
+	gsettings set "$deposit" use-theme-colors false
+	gsettings set "$deposit" foreground-color "rgb(208,207,204)"
+	gsettings set "$deposit" background-color "rgb(23,20,33)"
 
 	# Change desktop
 	sudo apt install -y curl
-	address="https://github.com/sharpordie/andpaper/raw/main/src/android-bottom-darken.png"
-	picture="$HOME/Pictures/Backgrounds/android-bottom-darken.png"
+	# address="https://github.com/sharpordie/andpaper/raw/main/src/android-bottom-darken.png"
+	address="https://raw.githubusercontent.com/sharpordie/odoowall/master/src/odoo-higher-darken.png"
+	picture="$HOME/Pictures/Backgrounds/$(basename "$address")"
 	mkdir -p "$(dirname $picture)" && curl -L "$address" -o "$picture"
 	# gsettings set org.gnome.desktop.background picture-uri "file://$picture"
 	gsettings set org.gnome.desktop.background picture-uri-dark "file://$picture"
@@ -51,11 +55,17 @@ update_appearance() {
 	# Change favorites
 	gsettings set org.gnome.shell favorite-apps "[]"
 
-	# Change dock-to-dock
+	# Change dash-to-dock
 	gsettings set org.gnome.shell.extensions.dash-to-dock click-action minimize
 	gsettings set org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 32
-	gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed true
+	gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed false
 	gsettings set org.gnome.shell.extensions.dash-to-dock show-trash false
+
+	# Change nautilus
+	gsettings set org.gnome.nautilus.preferences default-folder-viewer "list-view"
+	gsettings set org.gtk.Settings.FileChooser show-hidden false
+	gsettings set org.gtk.Settings.FileChooser sort-directories-first true
+	nautilus -q
 
 	# Change night-light
 	gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true
@@ -63,17 +73,17 @@ update_appearance() {
 	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-to 0
 	gsettings set org.gnome.settings-daemon.plugins.color night-light-temperature 5000
 
-	# Remove home directory
-	gsettings set org.gnome.shell.extensions.ding show-home false
-
 	# Remove snap directory
 	! grep -q "snap" "$HOME/.hidden" 2>/dev/null && echo "snap" >>"$HOME/.hidden"
+
+	# Remove home directory
+	gsettings set org.gnome.shell.extensions.ding show-home false
 
 }
 
 update_system() {
 
-	# Handle adjunct
+	# Handle parameters
 	country=${1:-Europe/Brussels}
 	machine=${2:-ubuhogen}
 
@@ -85,15 +95,15 @@ update_system() {
 	sudo ln -s "/usr/share/zoneinfo/$country" "/etc/localtime"
 
 	# # Update system
-	# sudo apt update
-	# sudo apt -y upgrade
-	# sudo apt -y dist-upgrade
+	sudo apt update
+	sudo apt -y upgrade
+	sudo apt -y dist-upgrade
 
 	# # Update firmware
-	# sudo fwupdmgr get-devices
-	# sudo fwupdmgr refresh --force
-	# sudo fwupdmgr get-updates
-	# sudo fwupdmgr update -y
+	sudo fwupdmgr get-devices
+	sudo fwupdmgr refresh --force
+	sudo fwupdmgr get-updates
+	sudo fwupdmgr update -y
 
 }
 
@@ -126,7 +136,7 @@ main() {
 
 	# Handle elements
 	factors=(
-		"update_system"
+		# "update_system"
 		"update_appearance"
 	)
 

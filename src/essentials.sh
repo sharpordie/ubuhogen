@@ -406,11 +406,11 @@ update_flutter() {
 update_jetbrains_plugin() {
 
 	# Handle parameters
-	deposit=${1}
+	deposit=${1:-/opt/android-studio}
 	element=${2}
 
 	# Update dependencies
-	[[ -d "$deposit" ]] || return 0
+	[[ -d "$deposit" && -n "$element" ]] || return 0
 	sudo apt install -y curl jq
 
 	# Update plugin

@@ -178,6 +178,7 @@ update_appearance() {
 	sudo ./ubuntu-gdm-set-background --image "$picture" || rm ./ubuntu-gdm-set-background
 
 	# Change favorites
+	update-desktop-database .
 	gsettings set org.gnome.shell favorite-apps "[]"
 
 	# Change dash-to-dock
@@ -203,6 +204,150 @@ update_appearance() {
 
 	# Remove home directory
 	gsettings set org.gnome.shell.extensions.ding show-home false
+
+}
+
+update_chromium() {
+
+	# Handle parameters
+	deposit=${1:-$HOME/Downloads/DDL}
+	startup=${2:-about:blank}
+
+	# Update dependencies
+	update_ydotool || return 1
+	sudo apt install -y curl flatpak jq
+
+	# Update package
+	starter="/var/lib/flatpak/exports/bin/com.github.Eloston.UngoogledChromium"
+	present=$([[ -f "$starter" ]] && echo true || echo false)
+	sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+	sudo flatpak remote-modify --enable flathub
+	flatpak install -y flathub com.github.Eloston.UngoogledChromium
+
+	# Change default browser
+	xdg-settings set default-web-browser "com.github.Eloston.UngoogledChromium.desktop"
+	xdg-settings check default-web-browser "com.github.Eloston.UngoogledChromium.desktop"
+	# xdg-mime default "com.github.Eloston.UngoogledChromium.desktop" x-scheme-handler/https x-scheme-handler/http
+
+	# Change environment
+	configs="$HOME/.bashrc"
+	if ! grep -q "CHROME_EXECUTABLE" "$configs" 2>/dev/null; then
+		[[ -s "$configs" ]] || touch "$configs"
+		[[ -z $(tail -1 "$configs") ]] || echo "" >>"$configs"
+		echo 'export CHROME_EXECUTABLE="/var/lib/flatpak/exports/bin/com.github.Eloston.UngoogledChromium"' >>"$configs"
+		export CHROME_EXECUTABLE="/var/lib/flatpak/exports/bin/com.github.Eloston.UngoogledChromium"
+	fi
+
+	# Finish installation
+	# INFO: Use `sudo showkey -k` to display keycodes
+	if [[ $present = false ]]; then
+
+		# Launch chromium
+		sleep 1 && (sudo ydotoold &) &>/dev/null
+		sleep 1 && (flatpak run com.github.Eloston.UngoogledChromium &) &>/dev/null
+		sleep 4 && sudo ydotool key 125:1 103:1 103:0 125:0
+
+		# Change deposit
+		mkdir -p "$deposit"
+		sleep 1 && sudo ydotool key 29:1 38:1 38:0 29:0
+		sleep 1 && sudo ydotool type "chrome://settings/" && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool type "before downloading" && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && for i in $(seq 1 3); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool key 56:1 15:1 15:0 56:0 && sleep 1 && sudo ydotool key 56:1 15:1 15:0 56:0
+		sleep 1 && sudo ydotool key 29:1 38:1 38:0 29:0 && sleep 1 && sudo ydotool type "$deposit" && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0
+
+		# Change engine
+		sleep 1 && sudo ydotool key 29:1 38:1 38:0 29:0
+		sleep 1 && sudo ydotool type "chrome://settings/" && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool type "search engines" && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && for i in $(seq 1 3); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool type "duckduckgo" && sleep 1 && sudo ydotool key 28:1 28:0
+
+		# Change custom-ntp
+		sleep 1 && sudo ydotool key 29:1 38:1 38:0 29:0
+		sleep 1 && sudo ydotool type "chrome://flags/" && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool type "custom-ntp" && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && for i in $(seq 1 5); do sleep 0.5 && sudo ydotool key 15:1 15:0; done
+		sleep 1 && sudo ydotool key 29:1 30:1 30:0 29:0 && sleep 1 && sudo ydotool type "$startup"
+		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool key 108:1 108:0 && sleep 1 && sudo ydotool key 28:1 28:0
+
+		# Change extension-mime-request-handling
+		sleep 1 && sudo ydotool key 29:1 38:1 38:0 29:0
+		sleep 1 && sudo ydotool type "chrome://flags/" && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool type "extension-mime-request-handling" && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && for i in $(seq 1 6); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 108:1 108:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+
+		# Change hide-sidepanel-button
+		sleep 1 && sudo ydotool key 29:1 38:1 38:0 29:0
+		sleep 1 && sudo ydotool type "chrome://flags/" && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool type "hide-sidepanel-button" && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && for i in $(seq 1 6); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool key 108:1 108:0 && sleep 1 && sudo ydotool key 28:1 28:0
+
+		# Change remove-tabsearch-button
+		sleep 1 && sudo ydotool key 29:1 38:1 38:0 29:0
+		sleep 1 && sudo ydotool type "chrome://flags/" && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool type "remove-tabsearch-button" && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && for i in $(seq 1 6); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool key 108:1 108:0 && sleep 1 && sudo ydotool key 28:1 28:0
+
+		# Change show-avatar-button
+		sleep 1 && sudo ydotool key 29:1 38:1 38:0 29:0
+		sleep 1 && sudo ydotool type "chrome://flags/" && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool type "show-avatar-button" && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && for i in $(seq 1 6); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && for i in $(seq 1 3); do sleep 0.5 && sudo ydotool key 108:1 108:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+
+		# Update chromium-web-store
+		website="https://api.github.com/repos/NeverDecaf/chromium-web-store/releases"
+		version=$(curl -Ls "$website" | jq -r ".[0].tag_name" | tr -d "v")
+		address="https://github.com/NeverDecaf/chromium-web-store/releases/download/v$version/Chromium.Web.Store.crx"
+		update_chromium_extension "$address"
+
+		# Update extensions
+		update_chromium_extension "bcjindcccaagfpapjjmafapmmgkkhgoa" # json-formatter
+		update_chromium_extension "ibplnjkanclpjokhdolnendpplpjiace" # simple-translate
+		update_chromium_extension "mnjggcdmjocbbbhaepdhchncahnbgone" # sponsorblock-for-youtube
+		update_chromium_extension "cjpalhdlnbpafiamejdnhcphjbkeiagm" # ublock-origin
+
+	fi
+
+}
+
+update_chromium_extension() {
+
+	# Handle parameters
+	payload=${1}
+
+	# Update dependencies
+	update_ydotool || return 1
+	sudo apt install -y curl
+
+	# Update extension
+	starter="/var/lib/flatpak/exports/bin/com.github.Eloston.UngoogledChromium"
+	present=$([[ -f "$starter" ]] && echo true || echo false)
+	if [[ $present = true ]]; then
+		flatpak kill com.github.Eloston.UngoogledChromium
+		sudo flatpak override com.github.Eloston.UngoogledChromium --filesystem=/tmp
+		if [ "${payload:0:4}" == "http" ]; then
+			address="$payload"
+			package="$(mktemp -d)/$(basename "$address")"
+		else
+			version="$(flatpak run com.github.Eloston.UngoogledChromium --product-version)"
+			address="https://clients2.google.com/service/update2/crx?response=redirect&acceptformat=crx2,crx3"
+			address="${address}&prodversion=${version}&x=id%3D${payload}%26installsource%3Dondemand%26uc"
+			package="$(mktemp -d)/$payload.crx"
+		fi
+		curl -L "$address" -o "$package" || return 1
+		sleep 1 && (sudo ydotoold &) &>/dev/null
+		sleep 1 && (flatpak run com.github.Eloston.UngoogledChromium "$package" &) &>/dev/null
+		sleep 4 && sudo ydotool key 125:1 103:1 103:0 125:0
+		sleep 2 && sudo ydotool key 108:1 108:0 && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 2 && sudo ydotool key 56:1 62:1 62:0 56:0
+	fi
 
 }
 
@@ -318,15 +463,15 @@ update_system() {
 
 	# Update system
 	sudo apt update
-	# sudo apt upgrade -y
-	# sudo apt dist-upgrade -y
-	# sudo apt autoremove -y
+	sudo apt upgrade -y
+	sudo apt dist-upgrade -y
+	sudo apt autoremove -y
 
-	# # Update firmware
-	# sudo fwupdmgr get-devices
-	# sudo fwupdmgr refresh --force
-	# sudo fwupdmgr get-updates
-	# sudo fwupdmgr update -y
+	# Update firmware
+	sudo fwupdmgr get-devices
+	sudo fwupdmgr refresh --force
+	sudo fwupdmgr get-updates
+	sudo fwupdmgr update -y
 
 }
 
@@ -335,11 +480,17 @@ update_ydotool() {
 	# Update dependencies
 	sudo apt install -y build-essential cmake git libboost-program-options-dev scdoc
 
-	# Update package
+	# Remove package
 	sudo apt autoremove -y --purge ydotool
-	current=$(dirname "$(readlink -f "$0")") && git clone "https://github.com/ReimuNotMoe/ydotool.git"
+
+	# Update package
+	current=$(date -r "$(which ydotool)" +"%s")
+	maximum=$(date -d "10 days ago" +"%s")
+	updated=$([[ $current -lt $maximum ]] && echo false || echo true)
+	[[ $updated == true ]] && return 0
+	deposit=$(dirname "$(readlink -f "$0")") && git clone "https://github.com/ReimuNotMoe/ydotool.git"
 	cd ydotool && mkdir build && cd build && cmake .. && make && sudo make install
-	cd "$current" && source "$HOME/.bashrc" && rm -rf ydotool
+	cd "$deposit" && source "$HOME/.bashrc" && rm -rf ydotool
 
 }
 
@@ -376,6 +527,7 @@ main() {
 		"update_appearance"
 		"update_nvidia"
 		"update_android_studio"
+		"update_chromium"
 		"update_flutter"
 		"update_nvidia_cuda"
 	)

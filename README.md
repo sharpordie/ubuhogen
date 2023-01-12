@@ -6,7 +6,7 @@ Opinionated post-installation script for Ubuntu 22.04.
 
 # <samp>GUIDANCE</samp>
 
-### One-command execution
+## One-command execution
 
 Running this blindly is strongly discouraged.
 

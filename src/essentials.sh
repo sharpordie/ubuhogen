@@ -129,11 +129,22 @@ update_android_studio() {
 
 update_appearance() {
 
+	# Change terminal
+	profile=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")
+	deposit="org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$profile/"
+	gsettings set "$deposit" font "Ubuntu Mono 12"
+	gsettings set "$deposit" cell-height-scale 1.1000000000000001
+	gsettings set "$deposit" default-size-columns 96
+	gsettings set "$deposit" default-size-rows 24
+	gsettings set "$deposit" use-theme-colors false
+	gsettings set "$deposit" foreground-color "rgb(208,207,204)"
+	gsettings set "$deposit" background-color "rgb(23,20,33)"
+
 	# Change fonts
 	# sudo apt install -y fonts-cascadia-code
 	# gsettings set org.gnome.desktop.interface font-name "Ubuntu 10"
 	# gsettings set org.gnome.desktop.interface document-font-name "Sans 10"
-	gsettings set org.gnome.desktop.interface monospace-font-name "Ubuntu Mono 12"
+	# gsettings set org.gnome.desktop.interface monospace-font-name "Ubuntu Mono 12"
 	# gsettings set org.gnome.desktop.wm.preferences titlebar-font "Ubuntu Bold 10"
 	# gsettings set org.gnome.desktop.wm.preferences titlebar-uses-system-font false
 
@@ -146,17 +157,7 @@ update_appearance() {
 	# Change theme
 	gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
 	gsettings set org.gnome.desktop.interface gtk-theme "Yaru-dark"
-
-	# Change terminal
-	profile=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")
-	deposit="org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$profile/"
-	gsettings set "$deposit" cell-height-scale 1.1000000000000001
-	gsettings set "$deposit" default-size-columns 96
-	gsettings set "$deposit" default-size-rows 24
-	gsettings set "$deposit" use-theme-colors false
-	gsettings set "$deposit" foreground-color "rgb(208,207,204)"
-	gsettings set "$deposit" background-color "rgb(23,20,33)"
-
+	
 	# Change desktop
 	sudo apt install -y curl
 	address="https://raw.githubusercontent.com/sharpordie/odoowall/master/src/odoo-higher-darken.png"
@@ -417,19 +418,21 @@ update_jetbrains_plugin() {
 	datadir=$(cat "$deposit/product-info.json" | jq -r ".dataDirectoryName")
 	adjunct=$([[ $datadir == "AndroidStudio"* ]] && echo "Google/$datadir" || "JetBrains/$datadir")
 	plugins="$HOME/.local/share/$adjunct" && mkdir -p "$plugins"
-	for i in {0..19}; do
-		address="https://plugins.jetbrains.com/api/plugins/$element/updates"
-		maximum=$(curl -s "$address" | jq ".[$i].until" | tr -d '"' | sed "s/\.\*/\.9999/")
-		minimum=$(curl -s "$address" | jq ".[$i].since" | tr -d '"' | sed "s/\.\*/\.9999/")
-		if dpkg --compare-versions "${minimum:-0000}" "le" "$release" && dpkg --compare-versions "$release" "le" "${maximum:-9999}"; then
-			address=$(curl -s "$address" | jq ".[$i].file" | tr -d '"')
-			address="https://plugins.jetbrains.com/files/$address"
-			archive="$(mktemp -d)/$(basename "$address")"
-			curl -LA "Mozilla/5.0" "$address" -o "$archive"
-			unzip -o "$archive" -d "$plugins"
-			break
-		fi
-		sleep 1
+	for i in {1..3}; do
+		for j in {0..19}; do
+			address="https://plugins.jetbrains.com/api/plugins/$element/updates?page=$i"
+			maximum=$(curl -s "$address" | jq ".[$j].until" | tr -d '"' | sed "s/\.\*/\.9999/")
+			minimum=$(curl -s "$address" | jq ".[$j].since" | tr -d '"' | sed "s/\.\*/\.9999/")
+			if dpkg --compare-versions "${minimum:-0000}" "le" "$release" && dpkg --compare-versions "$release" "le" "${maximum:-9999}"; then
+				address=$(curl -s "$address" | jq ".[$j].file" | tr -d '"')
+				address="https://plugins.jetbrains.com/files/$address"
+				archive="$(mktemp -d)/$(basename "$address")"
+				curl -LA "Mozilla/5.0" "$address" -o "$archive"
+				unzip -o "$archive" -d "$plugins"
+				break 2
+			fi
+			sleep 1
+		done
 	done
 
 }
@@ -533,8 +536,8 @@ main() {
 
 	# Handle elements
 	factors=(
-		"update_system"
 		"update_appearance"
+		"update_system"
 		"update_nvidia"
 		"update_android_studio"
 		"update_chromium"

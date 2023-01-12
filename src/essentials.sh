@@ -40,7 +40,7 @@ update_android_cmdline() {
 update_android_studio() {
 
 	# Handle parameters
-	release=${1:-beta}
+	release=${1:-stable}
 	deposit=${2:-$HOME/Projects}
 
 	# Update dependencies
@@ -141,12 +141,11 @@ update_appearance() {
 	gsettings set "$deposit" background-color "rgb(23,20,33)"
 
 	# Change fonts
-	# sudo apt install -y fonts-cascadia-code
-	# gsettings set org.gnome.desktop.interface font-name "Ubuntu 10"
-	# gsettings set org.gnome.desktop.interface document-font-name "Sans 10"
-	# gsettings set org.gnome.desktop.interface monospace-font-name "Ubuntu Mono 12"
-	# gsettings set org.gnome.desktop.wm.preferences titlebar-font "Ubuntu Bold 10"
-	# gsettings set org.gnome.desktop.wm.preferences titlebar-uses-system-font false
+	gsettings set org.gnome.desktop.interface font-name "Ubuntu 10"
+	gsettings set org.gnome.desktop.interface document-font-name "Sans 10"
+	gsettings set org.gnome.desktop.interface monospace-font-name "Ubuntu Mono 12"
+	gsettings set org.gnome.desktop.wm.preferences titlebar-font "Ubuntu Bold 10"
+	gsettings set org.gnome.desktop.wm.preferences titlebar-uses-system-font false
 
 	# Change icons
 	sudo add-apt-repository -y ppa:papirus/papirus-dev
@@ -157,10 +156,10 @@ update_appearance() {
 	# Change theme
 	gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
 	gsettings set org.gnome.desktop.interface gtk-theme "Yaru-dark"
-	
+
 	# Change desktop
 	sudo apt install -y curl
-	address="https://raw.githubusercontent.com/sharpordie/odoowall/master/src/odoo-higher-darken.png"
+	address="https://raw.githubusercontent.com/sharpordie/andpaper/main/src/android-bottom-bright.png"
 	picture="$HOME/Pictures/Backgrounds/$(basename "$address")"
 	mkdir -p "$(dirname $picture)" && curl -L "$address" -o "$picture"
 	# gsettings set org.gnome.desktop.background picture-uri "file://$picture"
@@ -183,7 +182,8 @@ update_appearance() {
 	gsettings set org.gnome.shell favorite-apps "[ \
 		'org.gnome.Nautilus.desktop', \
 		'com.github.Eloston.UngoogledChromium.desktop', \
-		'org.gnome.Terminal.desktop' \
+		'org.gnome.Terminal.desktop', \
+		'android-studio.desktop' \
 	]"
 
 	# Change dash-to-dock
@@ -382,7 +382,7 @@ update_flutter() {
 
 	# Finish installation
 	flutter channel stable
-	flutter precache && flutter upgrade
+	# flutter precache && flutter upgrade
 	dart --disable-analytics
 	flutter config --no-analytics
 	yes | flutter doctor --android-licenses

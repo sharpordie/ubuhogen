@@ -109,20 +109,20 @@ update_android_studio() {
 		yes | sdkmanager --channel=$channel "system-images;android-33;google_apis;x86_64"
 		yes | sdkmanager --channel=$channel --licenses
 		avdmanager create avd -n "Pixel_3_API_33" -d "pixel_3" -k "system-images;android-33;google_apis;x86_64" -f
-		update_ydotool || return 1
-		gsettings set org.gnome.desktop.notifications show-banners false
-		sleep 1 && (sudo ydotoold &) &>/dev/null
-		sleep 1 && ($payload &) &>/dev/null
-		sleep 8 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0
-		sleep 20 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
-		sleep 1 && sudo ydotool key 28:1 28:0
-		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
-		sleep 1 && sudo ydotool key 28:1 28:0
-		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
-		sleep 1 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0
-		sleep 1 && sudo ydotool key 56:1 62:1 62:0 56:0
-		sleep 1 && sudo ydotool key 28:1 28:0 && sleep 1 && sudo ydotool key 28:1 28:0
-		sleep 8 && sudo ydotool key 56:1 62:1 62:0 56:0
+		# update_ydotool || return 1
+		# gsettings set org.gnome.desktop.notifications show-banners false
+		# sleep 1 && (sudo ydotoold &) &>/dev/null
+		# sleep 1 && ($payload &) &>/dev/null
+		# sleep 8 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0
+		# sleep 20 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+		# sleep 1 && sudo ydotool key 28:1 28:0
+		# sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+		# sleep 1 && sudo ydotool key 28:1 28:0
+		# sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+		# sleep 1 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0
+		# sleep 1 && sudo ydotool key 56:1 62:1 62:0 56:0
+		# sleep 1 && sudo ydotool key 28:1 28:0 && sleep 1 && sudo ydotool key 28:1 28:0
+		# sleep 8 && sudo ydotool key 56:1 62:1 62:0 56:0
 	fi
 
 }

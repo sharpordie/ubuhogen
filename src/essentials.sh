@@ -130,12 +130,12 @@ update_android_studio() {
 update_appearance() {
 
 	# Change fonts
-	sudo apt install -y fonts-cascadia-code
-	gsettings set org.gnome.desktop.interface font-name "Ubuntu 10"
-	gsettings set org.gnome.desktop.interface document-font-name "Sans 10"
+	# sudo apt install -y fonts-cascadia-code
+	# gsettings set org.gnome.desktop.interface font-name "Ubuntu 10"
+	# gsettings set org.gnome.desktop.interface document-font-name "Sans 10"
 	gsettings set org.gnome.desktop.interface monospace-font-name "Ubuntu Mono 12"
-	gsettings set org.gnome.desktop.wm.preferences titlebar-font "Ubuntu Bold 10"
-	gsettings set org.gnome.desktop.wm.preferences titlebar-uses-system-font false
+	# gsettings set org.gnome.desktop.wm.preferences titlebar-font "Ubuntu Bold 10"
+	# gsettings set org.gnome.desktop.wm.preferences titlebar-uses-system-font false
 
 	# Change icons
 	sudo add-apt-repository -y ppa:papirus/papirus-dev
@@ -179,7 +179,11 @@ update_appearance() {
 
 	# Change favorites
 	update-desktop-database .
-	gsettings set org.gnome.shell favorite-apps "[]"
+	gsettings set org.gnome.shell favorite-apps "[ \
+		'org.gnome.Nautilus.desktop', \
+		'com.github.Eloston.UngoogledChromium.desktop', \
+		'org.gnome.Terminal.desktop' \
+	]"
 
 	# Change dash-to-dock
 	gsettings set org.gnome.shell.extensions.dash-to-dock click-action minimize
@@ -300,6 +304,12 @@ update_chromium() {
 		sleep 1 && sudo ydotool type "show-avatar-button" && sleep 1 && sudo ydotool key 28:1 28:0
 		sleep 1 && for i in $(seq 1 6); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
 		sleep 1 && for i in $(seq 1 3); do sleep 0.5 && sudo ydotool key 108:1 108:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+
+		# Remove bookmark bar (ctr+shift+b)
+		sleep 4 && sudo ydotool key 29:1 42:1 48:1 48:0 42:0 29:0
+
+		# Finish chromium
+		sleep 4 && sudo ydotool key 56:1 62:1 62:0 56:0
 
 		# Update chromium-web-store
 		website="https://api.github.com/repos/NeverDecaf/chromium-web-store/releases"

@@ -14,7 +14,7 @@ update_android_cmdline() {
 		version="$(curl -s "$website" | grep -oP "commandlinetools-linux-\K(\d+)" | head -1)"
 		address="https://dl.google.com/android/repository/commandlinetools-linux-${version}_latest.zip"
 		archive="$(mktemp -d)/$(basename "$address")"
-		curl -LA "Mozilla/5.0" "$address" -o "$archive"
+		curl -LA "mozilla/5.0" "$address" -o "$archive"
 		unzip -d "$deposit" "$archive"
 		yes | "$deposit/cmdline-tools/bin/sdkmanager" --sdk_root="$sdkroot" "cmdline-tools;latest"
 		rm -rf "$deposit/cmdline-tools"
@@ -59,7 +59,7 @@ update_android_studio() {
 	if [[ $updated == false ]]; then
 		address="https://dl.google.com/dl/android/studio/ide-zips/$version/android-studio-$version-linux.tar.gz"
 		package="$(mktemp -d)/$(basename "$address")"
-		curl -LA "Mozilla/5.0" "$address" -o "$package"
+		curl -LA "mozilla/5.0" "$address" -o "$package"
 		sudo rm -r "/opt/$payload"
 		tempdir="$(mktemp -d)" && sudo tar -xvf "$package" -C "$tempdir"
 		sudo mv -f "$tempdir/android-studio" "/opt/$payload"
@@ -245,7 +245,7 @@ update_chromium() {
 
 	# Finish installation
 	# INFO: Use `sudo showkey -k` to display keycodes
-	if [[ $present = false ]]; then
+	if [[ $present == false ]]; then
 
 		# Launch chromium
 		sleep 1 && (sudo ydotoold &) &>/dev/null
@@ -340,7 +340,7 @@ update_chromium_extension() {
 	# Update extension
 	starter="/var/lib/flatpak/exports/bin/com.github.Eloston.UngoogledChromium"
 	present=$([[ -f "$starter" ]] && echo true || echo false)
-	if [[ $present = true ]]; then
+	if [[ $present == true ]]; then
 		flatpak kill com.github.Eloston.UngoogledChromium
 		sudo flatpak override com.github.Eloston.UngoogledChromium --filesystem=/tmp
 		if [ "${payload:0:4}" == "http" ]; then
@@ -403,6 +403,25 @@ update_flutter() {
 
 }
 
+update_git() {
+
+	default=${1:-main}
+	gitmail=${2:-anonymous@example.org}
+	gituser=${3:-anonymous}
+
+	# Update git
+	sudo add-apt-repository -y ppa:git-core/ppa
+	sudo apt update && sudo apt install -y git
+
+	# Change settings
+	git config --global credential.helper "store"
+	git config --global http.postBuffer 1048576000
+	git config --global init.defaultBranch "$default"
+	git config --global user.email "$gitmail"
+	git config --global user.name "$gituser"
+
+}
+
 update_jetbrains_plugin() {
 
 	# Handle parameters
@@ -427,7 +446,7 @@ update_jetbrains_plugin() {
 				address=$(curl -s "$address" | jq ".[$j].file" | tr -d '"')
 				address="https://plugins.jetbrains.com/files/$address"
 				archive="$(mktemp -d)/$(basename "$address")"
-				curl -LA "Mozilla/5.0" "$address" -o "$archive"
+				curl -LA "mozilla/5.0" "$address" -o "$archive"
 				unzip -o "$archive" -d "$plugins"
 				break 2
 			fi
@@ -441,8 +460,7 @@ update_nvidia() {
 
 	# Update package
 	[[ $(lspci | grep -e VGA) == *"NVIDIA"* ]] || return 1
-	sudo apt update && sudo apt upgrade -y
-	sudo apt update && sudo apt install -y nvidia-driver
+	sudo apt update && sudo apt install -y nvidia-driver-525
 
 }
 
@@ -474,17 +492,63 @@ update_system() {
 	sudo unlink "/etc/localtime"
 	sudo ln -s "/usr/share/zoneinfo/$country" "/etc/localtime"
 
-	# Update system
-	sudo apt update
-	sudo apt upgrade -y
-	sudo apt dist-upgrade -y
-	sudo apt autoremove -y
+	# Change network
+	configs="/etc/NetworkManager/conf.d/default-wifi-powersave-on.conf"
+	sudo sed -i "s/wifi.powersave =.*/wifi.powersave = 2/" "$configs"
+	sudo systemctl disable NetworkManager-wait-online.service
 
 	# Update firmware
 	sudo fwupdmgr get-devices
 	sudo fwupdmgr refresh --force
 	sudo fwupdmgr get-updates
 	sudo fwupdmgr update -y
+
+	# Update system
+	sudo apt update
+	sudo apt upgrade -y
+	sudo apt dist-upgrade -y
+	sudo apt autoremove -y
+
+}
+
+update_vscode() {
+
+	# Update dependencies
+	sudo apt -y install curl fonts-cascadia-code jq moreutils
+
+	# Update package
+	present="$([[ -x $(command -v code) ]] && echo true || echo false)"
+	if [[ $present == false ]]; then
+		package="$(mktemp -d)/code_latest_amd64.deb"
+		address="https://update.code.visualstudio.com/latest/linux-deb-x64/stable"
+		curl -LA "mozilla/5.0" "$address" -o "$package"
+		sudo apt install -y "$package"
+	fi
+
+	# Update extensions
+	code --install-extension bierner.markdown-preview-github-styles --force
+	code --install-extension foxundermoon.shell-format --force
+	code --install-extension github.github-vscode-theme --force
+
+	# Change settings
+	configs="$HOME/.config/Code/User/settings.json"
+	[[ -s "$configs" ]] || echo "{}" >"$configs"
+	jq '."editor.fontFamily" = "Cascadia Code, monospace"' "$configs" | sponge "$configs"
+	jq '."editor.fontSize" = 13' "$configs" | sponge "$configs"
+	jq '."editor.lineHeight" = 35' "$configs" | sponge "$configs"
+	jq '."security.workspace.trust.enabled" = false' "$configs" | sponge "$configs"
+	jq '."telemetry.telemetryLevel" = "crash"' "$configs" | sponge "$configs"
+	jq '."update.mode" = "none"' "$configs" | sponge "$configs"
+	jq '."window.menuBarVisibility" = "toggle"' "$configs" | sponge "$configs"
+	jq '."workbench.colorTheme" = "GitHub Dark Default"' "$configs" | sponge "$configs"
+
+	# Change max_user_watches
+	if ! grep -q "fs.inotify.max_user_watches" "/etc/sysctl.conf" 2>/dev/null; then
+		[[ -z $(tail -1 "/etc/sysctl.conf") ]] || echo "" | sudo tee -a "/etc/sysctl.conf"
+		echo "# Augment the amount of inotify watchers" | sudo tee -a "/etc/sysctl.conf"
+		echo "fs.inotify.max_user_watches=524288" | sudo tee -a "/etc/sysctl.conf"
+		sudo sysctl -p
+	fi
 
 }
 
@@ -539,9 +603,13 @@ main() {
 		"update_appearance"
 		"update_system"
 		"update_nvidia"
-		"update_android_studio"
+
+		# "update_android_studio"
 		"update_chromium"
-		"update_flutter"
+		"update_git main sharpordie@outlook.com sharpordie"
+		"update_vscode"
+
+		# "update_flutter"
 		"update_nvidia_cuda"
 	)
 

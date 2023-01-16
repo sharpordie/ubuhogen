@@ -458,14 +458,6 @@ update_jetbrains_plugin() {
 
 update_nvidia() {
 
-	# Update package
-	[[ $(lspci | grep -e VGA) == *"NVIDIA"* ]] || return 1
-	sudo apt update && sudo apt install -y nvidia-driver-525
-
-}
-
-update_nvidia_cuda() {
-
 	# Update dependencies
 	[[ $(lspci | grep -e VGA) == *"NVIDIA"* ]] || return 1
 	sudo apt install -y apt-transport-https ca-certificates curl dirmngr dkms software-properties-common
@@ -475,7 +467,8 @@ update_nvidia_cuda() {
 	curl -fSsL "$address" | sudo gpg --dearmor | sudo tee /usr/share/keyrings/nvidia-drivers.gpg >/dev/null 2>&1
 	content="deb [signed-by=/usr/share/keyrings/nvidia-drivers.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /"
 	echo "$content" | sudo tee /etc/apt/sources.list.d/nvidia-drivers.list
-	sudo apt update && sudo apt install -y cuda
+	sudo apt update && sudo apt-get purge nvidia.
+	sudo apt install -y cuda-toolkit-12-0
 
 }
 
@@ -610,7 +603,6 @@ main() {
 		"update_vscode"
 
 		# "update_flutter"
-		"update_nvidia_cuda"
 	)
 
 	# Output progress

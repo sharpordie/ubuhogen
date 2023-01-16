@@ -460,15 +460,13 @@ update_nvidia() {
 
 	# Update dependencies
 	[[ $(lspci | grep -e VGA) == *"NVIDIA"* ]] || return 1
-	sudo apt install -y apt-transport-https ca-certificates curl dirmngr dkms software-properties-common
+	sudo apt install -y linux-headers-$(uname -r)
 
 	# Update package
-	address="https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/3bf863cc.pub"
-	curl -fSsL "$address" | sudo gpg --dearmor | sudo tee /usr/share/keyrings/nvidia-drivers.gpg >/dev/null 2>&1
-	content="deb [signed-by=/usr/share/keyrings/nvidia-drivers.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /"
-	echo "$content" | sudo tee /etc/apt/sources.list.d/nvidia-drivers.list
-	sudo apt update && sudo apt-get purge nvidia.
-	sudo apt install -y cuda-toolkit-12-0
+	address="https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.0-1_all.deb"
+	package="$(mktemp -d)/$(basename "$address")"
+	curl -LA "mozilla/5.0" "$address" -o "$package" && sudo dpkg -i "$package"
+	sudo apt update && sudo apt install -y cuda	
 
 }
 
@@ -599,7 +597,7 @@ main() {
 
 		# "update_android_studio"
 		"update_chromium"
-		"update_git main sharpordie@outlook.com sharpordie"
+		"update_git main 72373746+sharpordie@users.noreply.github.com sharpordie"
 		"update_vscode"
 
 		# "update_flutter"

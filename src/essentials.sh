@@ -810,25 +810,25 @@ main() {
 
 	# Handle elements
 	factors=(
-		# "update_system"
-		# "update_nvidia"
+		"update_system"
+		"update_nvidia"
 
-		# "update_android_studio"
-		# "update_chromium"
-		# "update_git main sharpordie 72373746+sharpordie@users.noreply.github.com"
-		# "update_vscode"
+		"update_android_studio"
+		"update_chromium"
+		"update_git main sharpordie 72373746+sharpordie@users.noreply.github.com"
+		"update_vscode"
 
-		# "update_docker"
-		# "update_jdownloader"
-		# "update_keepassxc"
-		# "update_flutter"
-		# "update_inkscape"
-		# "update_lunacy"
-		# "update_mambaforge"
-		# "update_nodejs"
+		"update_docker"
+		"update_jdownloader"
+		"update_keepassxc"
+		"update_flutter"
+		"update_inkscape"
+		"update_lunacy"
+		"update_mambaforge"
+		"update_nodejs"
 		"update_pgadmin"
 		"update_postgresql"
-		# "update_python"
+		"update_python"
 	)
 
 	# Output progress

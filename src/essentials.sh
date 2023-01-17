@@ -172,6 +172,7 @@ update_appearance() {
 		'android-studio.desktop', \
 		'jetbrains-pycharm.desktop', \
 		'pgadmin4.desktop', \
+		'lunacy.desktop', \
 		'mpv.desktop', \
 		'org.keepassxc.KeePassXC.desktop' \
 	]"
@@ -528,7 +529,7 @@ update_jetbrains_plugin() {
 	# Update plugin
 	release=$(cat "$deposit/product-info.json" | jq -r ".buildNumber" | grep -oP "(\d.+)")
 	datadir=$(cat "$deposit/product-info.json" | jq -r ".dataDirectoryName")
-	adjunct=$([[ $datadir == "AndroidStudio"* ]] && echo "Google/$datadir" || "JetBrains/$datadir")
+	adjunct=$([[ $datadir == "AndroidStudio"* ]] && echo "Google/$datadir" || echo "JetBrains/$datadir")
 	plugins="$HOME/.local/share/$adjunct" && mkdir -p "$plugins"
 	for i in {1..3}; do
 		for j in {0..19}; do

@@ -6,30 +6,33 @@ update_android_cmdline() {
 	sudo apt install -y default-jdk
 
 	# Update package
-	sdkroot="$HOME/.android/sdk"
-	deposit="$sdkroot/cmdline-tools"
-	if [[ ! -d $deposit ]]; then
-		mkdir -p "$deposit"
-		website="https://developer.android.com/studio#command-tools"
-		version="$(curl -s "$website" | grep -oP "commandlinetools-linux-\K(\d+)" | head -1)"
+	sdkroot="$HOME/Android/Sdk"
+	tempdir="$sdkroot/cmdline-tools"
+	if [[ ! -d "$tempdir" ]]; then
+		mkdir -p "$tempdir"
+		address="https://developer.android.com/studio#command-tools"
+		version="$(curl -s "$address" | grep -oP "commandlinetools-linux-\K(\d+)" | head -1)"
 		address="https://dl.google.com/android/repository/commandlinetools-linux-${version}_latest.zip"
 		archive="$(mktemp -d)/$(basename "$address")"
 		curl -LA "mozilla/5.0" "$address" -o "$archive"
-		unzip -d "$deposit" "$archive"
-		yes | "$deposit/cmdline-tools/bin/sdkmanager" --sdk_root="$sdkroot" "cmdline-tools;latest"
-		rm -rf "$deposit/cmdline-tools"
+		unzip -d "$tempdir" "$archive"
+		yes | "$tempdir/cmdline-tools/bin/sdkmanager" --sdk_root="$sdkroot" "cmdline-tools;latest"
+		rm -rf "$tempdir/cmdline-tools"
 	fi
+
+	# Remove Android directory
+	! grep -q "Android" "$HOME/.hidden" 2>/dev/null && echo "Android" >>"$HOME/.hidden"
 
 	# Change environment
 	configs="$HOME/.bashrc"
 	if ! grep -q "ANDROID_HOME" "$configs" 2>/dev/null; then
 		[[ -s "$configs" ]] || touch "$configs"
 		[[ -z $(tail -1 "$configs") ]] || echo "" >>"$configs"
-		echo 'export ANDROID_HOME="$HOME/.android/sdk"' >>"$configs"
+		echo 'export ANDROID_HOME="$HOME/Android/Sdk"' >>"$configs"
 		echo 'export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin"' >>"$configs"
 		echo 'export PATH="$PATH:$ANDROID_HOME/emulator"' >>"$configs"
 		echo 'export PATH="$PATH:$ANDROID_HOME/platform-tools"' >>"$configs"
-		export ANDROID_HOME="$HOME/.android/sdk"
+		export ANDROID_HOME="$HOME/Android/Sdk"
 		export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin"
 		export PATH="$PATH:$ANDROID_HOME/emulator"
 		export PATH="$PATH:$ANDROID_HOME/platform-tools"
@@ -124,91 +127,6 @@ update_android_studio() {
 		# sleep 1 && sudo ydotool key 28:1 28:0 && sleep 1 && sudo ydotool key 28:1 28:0
 		# sleep 8 && sudo ydotool key 56:1 62:1 62:0 56:0
 	fi
-
-}
-
-update_appearance() {
-
-	# Change terminal
-	profile=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")
-	deposit="org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$profile/"
-	gsettings set "$deposit" font "Ubuntu Mono 12"
-	gsettings set "$deposit" cell-height-scale 1.1000000000000001
-	gsettings set "$deposit" default-size-columns 96
-	gsettings set "$deposit" default-size-rows 24
-	gsettings set "$deposit" use-theme-colors false
-	gsettings set "$deposit" foreground-color "rgb(208,207,204)"
-	gsettings set "$deposit" background-color "rgb(23,20,33)"
-
-	# Change fonts
-	gsettings set org.gnome.desktop.interface font-name "Ubuntu 10"
-	gsettings set org.gnome.desktop.interface document-font-name "Sans 10"
-	gsettings set org.gnome.desktop.interface monospace-font-name "Ubuntu Mono 12"
-	gsettings set org.gnome.desktop.wm.preferences titlebar-font "Ubuntu Bold 10"
-	gsettings set org.gnome.desktop.wm.preferences titlebar-uses-system-font false
-
-	# Change icons
-	sudo add-apt-repository -y ppa:papirus/papirus-dev
-	sudo apt update && sudo apt install -y papirus-folders papirus-icon-theme
-	gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
-	sudo papirus-folders --color yaru --theme Papirus-Dark
-
-	# Change theme
-	gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
-	gsettings set org.gnome.desktop.interface gtk-theme "Yaru-dark"
-
-	# Change desktop
-	sudo apt install -y curl
-	address="https://raw.githubusercontent.com/sharpordie/andpaper/main/src/android-bottom-bright.png"
-	picture="$HOME/Pictures/Backgrounds/$(basename "$address")"
-	mkdir -p "$(dirname $picture)" && curl -L "$address" -o "$picture"
-	# gsettings set org.gnome.desktop.background picture-uri "file://$picture"
-	gsettings set org.gnome.desktop.background picture-uri-dark "file://$picture"
-	gsettings set org.gnome.desktop.background picture-options "zoom"
-
-	# Change screensaver
-	gsettings set org.gnome.desktop.screensaver picture-uri "file://$picture"
-	gsettings set org.gnome.desktop.screensaver picture-options "zoom"
-
-	# Change login
-	sudo apt install -y libglib2.0-dev-bin
-	address="https://github.com/PRATAP-KUMAR/ubuntu-gdm-set-background/archive/main.tar.gz"
-	element="ubuntu-gdm-set-background-main/ubuntu-gdm-set-background"
-	wget -qO - "$address" | tar zx --strip-components=1 "$element"
-	sudo ./ubuntu-gdm-set-background --image "$picture" || rm ./ubuntu-gdm-set-background
-
-	# Change favorites
-	update-desktop-database .
-	gsettings set org.gnome.shell favorite-apps "[ \
-		'org.gnome.Nautilus.desktop', \
-		'com.github.Eloston.UngoogledChromium.desktop', \
-		'org.gnome.Terminal.desktop', \
-		'android-studio.desktop' \
-	]"
-
-	# Change dash-to-dock
-	gsettings set org.gnome.shell.extensions.dash-to-dock click-action minimize
-	gsettings set org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 32
-	gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed false
-	gsettings set org.gnome.shell.extensions.dash-to-dock show-trash false
-
-	# Change nautilus
-	gsettings set org.gnome.nautilus.preferences default-folder-viewer "list-view"
-	gsettings set org.gtk.Settings.FileChooser show-hidden false
-	gsettings set org.gtk.Settings.FileChooser sort-directories-first true
-	nautilus -q
-
-	# Change night-light
-	gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true
-	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-from 0
-	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-to 0
-	gsettings set org.gnome.settings-daemon.plugins.color night-light-temperature 5000
-
-	# Remove snap directory
-	! grep -q "snap" "$HOME/.hidden" 2>/dev/null && echo "snap" >>"$HOME/.hidden"
-
-	# Remove home directory
-	gsettings set org.gnome.shell.extensions.ding show-home false
 
 }
 
@@ -368,7 +286,7 @@ update_flutter() {
 	sudo apt -y install build-essential clang cmake curl git libgtk-3-dev ninja-build pkg-config
 
 	# Update package
-	deposit="$HOME/.android/flutter" && mkdir -p "$deposit"
+	deposit="$HOME/Android/Flutter" && mkdir -p "$deposit"
 	git clone "https://github.com/flutter/flutter.git" -b stable "$deposit"
 
 	# Adjust environment
@@ -376,8 +294,8 @@ update_flutter() {
 	if ! grep -q "flutter" "$configs" 2>/dev/null; then
 		[[ -s "$configs" ]] || touch "$configs"
 		[[ -z $(tail -1 "$configs") ]] || echo "" >>"$configs"
-		echo 'export PATH="$PATH:$HOME/.android/flutter/bin"' >>"$configs"
-		export PATH="$PATH:$HOME/.android/flutter/bin"
+		echo 'export PATH="$PATH:$HOME/Android/Flutter/bin"' >>"$configs"
+		export PATH="$PATH:$HOME/Android/Flutter/bin"
 	fi
 
 	# Finish installation
@@ -406,8 +324,8 @@ update_flutter() {
 update_git() {
 
 	default=${1:-main}
-	gitmail=${2:-anonymous@example.org}
-	gituser=${3:-anonymous}
+	gituser=${2:-anonymous}
+	gitmail=${3:-anonymous@example.org}
 
 	# Update git
 	sudo add-apt-repository -y ppa:git-core/ppa
@@ -419,6 +337,56 @@ update_git() {
 	git config --global init.defaultBranch "$default"
 	git config --global user.email "$gitmail"
 	git config --global user.name "$gituser"
+
+}
+
+update_jdownloader() {
+
+	# Handle parameters
+	deposit=${1:-$HOME/Downloads/JD2}
+
+	# Update dependencies
+	sudo apt -y install flatpak jq moreutils
+
+	# Update jdownloader
+	starter="/var/lib/flatpak/exports/bin/org.jdownloader.JDownloader"
+	present=$([[ -f "$starter" ]] && echo true || echo false)
+	sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+	sudo flatpak remote-modify --enable flathub
+	flatpak install -y flathub org.jdownloader.JDownloader
+
+	# Create deposit
+	mkdir -p "$deposit"
+
+	# Change desktop
+	desktop="/var/lib/flatpak/exports/share/applications/org.jdownloader.JDownloader.desktop"
+	sudo sed -i 's/Icon=.*/Icon=jdownloader/' "$desktop"
+
+	# Change settings
+	if [[ $present = false ]]; then
+		appdata="$HOME/.var/app/org.jdownloader.JDownloader/data/jdownloader/cfg"
+		config1="$appdata/org.jdownloader.settings.GraphicalUserInterfaceSettings.json"
+		config2="$appdata/org.jdownloader.settings.GeneralSettings.json"
+		config3="$appdata/org.jdownloader.gui.jdtrayicon.TrayExtension.json"
+		config4="$appdata/org.jdownloader.extensions.extraction.ExtractionExtension.json"
+		(flatpak run org.jdownloader.JDownloader >/dev/null 2>&1 &) && sleep 8
+		while [[ ! -f "$config1" ]]; do sleep 2; done
+		flatpak kill org.jdownloader.JDownloader && sleep 8
+		jq ".bannerenabled = false" "$config1" | sponge "$config1"
+		jq ".clipboardmonitored = false" "$config1" | sponge "$config1"
+		jq ".donatebuttonlatestautochange = 4102444800000" "$config1" | sponge "$config1"
+		jq ".donatebuttonstate = \"AUTO_HIDDEN\"" "$config1" | sponge "$config1"
+		jq ".myjdownloaderviewvisible = false" "$config1" | sponge "$config1"
+		jq ".premiumalertetacolumnenabled = false" "$config1" | sponge "$config1"
+		jq ".premiumalertspeedcolumnenabled = false" "$config1" | sponge "$config1"
+		jq ".premiumalerttaskcolumnenabled = false" "$config1" | sponge "$config1"
+		jq ".specialdealoboomdialogvisibleonstartup = false" "$config1" | sponge "$config1"
+		jq ".specialdealsenabled = false" "$config1" | sponge "$config1"
+		jq ".speedmetervisible = false" "$config1" | sponge "$config1"
+		jq ".defaultdownloadfolder = \"$deposit\"" "$config2" | sponge "$config2"
+		jq ".enabled = false" "$config3" | sponge "$config3"
+		jq ".enabled = false" "$config4" | sponge "$config4"
+	fi
 
 }
 
@@ -466,7 +434,7 @@ update_nvidia() {
 	address="https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.0-1_all.deb"
 	package="$(mktemp -d)/$(basename "$address")"
 	curl -LA "mozilla/5.0" "$address" -o "$package" && sudo dpkg -i "$package"
-	sudo apt update && sudo apt install -y cuda	
+	sudo apt update && sudo apt install -y cuda
 
 }
 
@@ -475,6 +443,88 @@ update_system() {
 	# Handle parameters
 	country=${1:-Europe/Brussels}
 	machine=${2:-ubuhogen}
+
+	# Change terminal
+	profile=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")
+	deposit="org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$profile/"
+	gsettings set "$deposit" font "Ubuntu Mono 12"
+	gsettings set "$deposit" cell-height-scale 1.1000000000000001
+	gsettings set "$deposit" default-size-columns 96
+	gsettings set "$deposit" default-size-rows 24
+	gsettings set "$deposit" use-theme-colors false
+	gsettings set "$deposit" foreground-color "rgb(208,207,204)"
+	gsettings set "$deposit" background-color "rgb(23,20,33)"
+
+	# Change fonts
+	gsettings set org.gnome.desktop.interface font-name "Ubuntu 10"
+	gsettings set org.gnome.desktop.interface document-font-name "Sans 10"
+	gsettings set org.gnome.desktop.interface monospace-font-name "Ubuntu Mono 12"
+	gsettings set org.gnome.desktop.wm.preferences titlebar-font "Ubuntu Bold 10"
+	gsettings set org.gnome.desktop.wm.preferences titlebar-uses-system-font false
+
+	# Enable night-light
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-from 0
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-to 0
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-temperature 5000
+
+	# Change dash-to-dock
+	gsettings set org.gnome.shell.extensions.dash-to-dock click-action minimize
+	gsettings set org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 32
+	gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed false
+	gsettings set org.gnome.shell.extensions.dash-to-dock show-trash false
+
+	# Change favorites
+	gsettings set org.gnome.shell favorite-apps "[ \
+		'org.gnome.Nautilus.desktop', \
+		'com.github.Eloston.UngoogledChromium.desktop', \
+		'org.jdownloader.JDownloader.desktop', \
+		'org.gnome.Terminal.desktop', \
+		'code.desktop', \
+		'android-studio.desktop' \
+	]"
+
+	# Remove home directory
+	gsettings set org.gnome.shell.extensions.ding show-home false
+
+	# Change theme
+	gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
+	gsettings set org.gnome.desktop.interface gtk-theme "Yaru-dark"
+
+	# Change icons
+	sudo add-apt-repository -y ppa:papirus/papirus-dev
+	sudo apt update && sudo apt install -y papirus-folders papirus-icon-theme
+	gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
+	sudo papirus-folders --color yaru --theme Papirus-Dark
+
+	# Change desktop
+	sudo apt install -y curl
+	address="https://raw.githubusercontent.com/sharpordie/andpaper/main/src/android-bottom-bright.png"
+	picture="$HOME/Pictures/Backgrounds/$(basename "$address")"
+	mkdir -p "$(dirname $picture)" && curl -L "$address" -o "$picture"
+	# gsettings set org.gnome.desktop.background picture-uri "file://$picture"
+	gsettings set org.gnome.desktop.background picture-uri-dark "file://$picture"
+	gsettings set org.gnome.desktop.background picture-options "zoom"
+
+	# Change screensaver
+	gsettings set org.gnome.desktop.screensaver picture-uri "file://$picture"
+	gsettings set org.gnome.desktop.screensaver picture-options "zoom"
+
+	# Change login
+	sudo apt install -y libglib2.0-dev-bin
+	address="https://github.com/PRATAP-KUMAR/ubuntu-gdm-set-background/archive/main.tar.gz"
+	element="ubuntu-gdm-set-background-main/ubuntu-gdm-set-background"
+	wget -qO - "$address" | tar zx --strip-components=1 "$element"
+	sudo ./ubuntu-gdm-set-background --image "$picture" || rm ./ubuntu-gdm-set-background
+
+	# Remove snap directory
+	! grep -q "snap" "$HOME/.hidden" 2>/dev/null && echo "snap" >>"$HOME/.hidden"
+
+	# Change nautilus
+	gsettings set org.gnome.nautilus.preferences default-folder-viewer "list-view"
+	gsettings set org.gtk.Settings.FileChooser show-hidden false
+	gsettings set org.gtk.Settings.FileChooser sort-directories-first true
+	nautilus -q
 
 	# Change hostname
 	hostnamectl hostname "$machine"
@@ -556,9 +606,9 @@ update_ydotool() {
 	maximum=$(date -d "10 days ago" +"%s")
 	updated=$([[ $current -lt $maximum ]] && echo false || echo true)
 	[[ $updated == true ]] && return 0
-	deposit=$(dirname "$(readlink -f "$0")") && git clone "https://github.com/ReimuNotMoe/ydotool.git"
+	tempdir=$(dirname "$(readlink -f "$0")") && git clone "https://github.com/ReimuNotMoe/ydotool.git"
 	cd ydotool && mkdir build && cd build && cmake .. && make && sudo make install
-	cd "$deposit" && source "$HOME/.bashrc" && rm -rf ydotool
+	rm -rf ydotool && cd "$tempdir" && source "$HOME/.bashrc"
 
 }
 
@@ -591,16 +641,16 @@ main() {
 
 	# Handle elements
 	factors=(
-		"update_appearance"
 		"update_system"
 		"update_nvidia"
 
-		# "update_android_studio"
+		"update_android_studio"
 		"update_chromium"
-		"update_git main 72373746+sharpordie@users.noreply.github.com sharpordie"
+		"update_git main sharpordie 72373746+sharpordie@users.noreply.github.com"
 		"update_vscode"
 
-		# "update_flutter"
+		"update_jdownloader"
+		"update_flutter"
 	)
 
 	# Output progress
@@ -626,6 +676,8 @@ main() {
 	gsettings set org.gnome.desktop.notifications show-banners true
 	gsettings set org.gnome.desktop.screensaver lock-enabled true
 	gsettings set org.gnome.desktop.session idle-delay 300
+
+	# Output new line
 	printf "\n"
 
 }

@@ -130,6 +130,95 @@ update_android_studio() {
 
 }
 
+update_appearance() {
+
+	# Change terminal
+	profile=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")
+	deposit="org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$profile/"
+	gsettings set "$deposit" font "Ubuntu Mono 12"
+	gsettings set "$deposit" cell-height-scale 1.1000000000000001
+	gsettings set "$deposit" default-size-columns 96
+	gsettings set "$deposit" default-size-rows 24
+	gsettings set "$deposit" use-theme-colors false
+	gsettings set "$deposit" foreground-color "rgb(208,207,204)"
+	gsettings set "$deposit" background-color "rgb(23,20,33)"
+
+	# Change fonts
+	gsettings set org.gnome.desktop.interface font-name "Ubuntu 10"
+	gsettings set org.gnome.desktop.interface document-font-name "Sans 10"
+	gsettings set org.gnome.desktop.interface monospace-font-name "Ubuntu Mono 12"
+	gsettings set org.gnome.desktop.wm.preferences titlebar-font "Ubuntu Bold 10"
+	gsettings set org.gnome.desktop.wm.preferences titlebar-uses-system-font false
+
+	# Enable night-light
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-from 0
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-to 0
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-temperature 5000
+
+	# Change dash-to-dock
+	gsettings set org.gnome.shell.extensions.dash-to-dock click-action minimize
+	gsettings set org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 32
+	gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed false
+	gsettings set org.gnome.shell.extensions.dash-to-dock show-trash false
+
+	# Change favorites
+	gsettings set org.gnome.shell favorite-apps "[ \
+		'org.gnome.Nautilus.desktop', \
+		'com.github.Eloston.UngoogledChromium.desktop', \
+		'org.jdownloader.JDownloader.desktop', \
+		'org.gnome.Terminal.desktop', \
+		'code.desktop', \
+		'android-studio.desktop', \
+		'jetbrains-pycharm.desktop', \
+		'pgadmin4.desktop', \
+		'mpv.desktop', \
+		'org.keepassxc.KeePassXC.desktop' \
+	]"
+
+	# Remove home directory
+	gsettings set org.gnome.shell.extensions.ding show-home false
+
+	# Change theme
+	gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
+	gsettings set org.gnome.desktop.interface gtk-theme "Yaru-dark"
+
+	# Change icons
+	sudo add-apt-repository -y ppa:papirus/papirus-dev
+	sudo apt update && sudo apt install -y papirus-folders papirus-icon-theme
+	gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
+	sudo papirus-folders --color yaru --theme Papirus-Dark
+
+	# Change desktop
+	sudo apt install -y curl
+	address="https://raw.githubusercontent.com/sharpordie/andpaper/main/src/android-bottom-bright.png"
+	picture="$HOME/Pictures/Backgrounds/$(basename "$address")"
+	mkdir -p "$(dirname $picture)" && curl -L "$address" -o "$picture"
+	# gsettings set org.gnome.desktop.background picture-uri "file://$picture"
+	gsettings set org.gnome.desktop.background picture-uri-dark "file://$picture"
+	gsettings set org.gnome.desktop.background picture-options "zoom"
+
+	# Change screensaver
+	gsettings set org.gnome.desktop.screensaver picture-uri "file://$picture"
+	gsettings set org.gnome.desktop.screensaver picture-options "zoom"
+
+	# Change login
+	sudo apt install -y libglib2.0-dev-bin
+	address="https://github.com/PRATAP-KUMAR/ubuntu-gdm-set-background/archive/main.tar.gz"
+	element="ubuntu-gdm-set-background-main/ubuntu-gdm-set-background"
+	wget -qO - "$address" | tar zx --strip-components=1 "$element"
+	sudo ./ubuntu-gdm-set-background --image "$picture" || rm ./ubuntu-gdm-set-background
+
+	# Remove snap directory
+	! grep -q "snap" "$HOME/.hidden" 2>/dev/null && echo "snap" >>"$HOME/.hidden"
+
+	# Change nautilus
+	gsettings set org.gnome.nautilus.preferences default-folder-viewer "list-view"
+	gsettings set org.gtk.Settings.FileChooser show-hidden false
+	gsettings set org.gtk.Settings.FileChooser sort-directories-first true
+
+}
+
 update_chromium() {
 
 	# Handle parameters
@@ -331,6 +420,19 @@ update_flutter() {
 
 }
 
+update_gh() {
+
+	# Update dependencies
+	sudo apt -y install curl
+
+	# Update package
+	curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+	sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+	echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
+	sudo apt update && sudo apt install -y gh
+
+}
+
 update_git() {
 
 	# Handle parameters
@@ -499,6 +601,39 @@ update_mambaforge() {
 
 }
 
+update_mpv() {
+
+	# Update package
+	sudo add-apt-repository -y ppa:savoury1/ffmpeg4
+	sudo add-apt-repository -y ppa:savoury1/ffmpeg5
+	sudo add-apt-repository -y ppa:savoury1/mpv
+	sudo apt update && sudo apt -y install libmpv2 mpv
+
+	# Change desktop
+	desktop="/usr/share/applications/mpv.desktop"
+	sudo sed -i "s/Name=.*/Name=Mpv/" "$desktop"
+
+	# Create mpv.conf
+	config1="$HOME/.config/mpv/mpv.conf"
+	mkdir -p "$(dirname "$config1")" && cat /dev/null >"$config1"
+	echo "profile=gpu-hq" >>"$config1"
+	echo "vo=gpu-next" >>"$config1"
+	echo "keep-open=yes" >>"$config1"
+	# echo "save-position-on-quit=yes" >>"$config1"
+	echo 'ytdl-format="bestvideo[height<=?2160]+bestaudio/best"' >>"$config1"
+	echo "[protocol.http]" >>"$config1"
+	echo "force-window=immediate" >>"$config1"
+	echo "[protocol.https]" >>"$config1"
+	echo "profile=protocol.http" >>"$config1"
+	echo "[protocol.ytdl]" >>"$config1"
+	echo "profile=protocol.http" >>"$config1"
+
+	# Create input.conf
+	config2="$HOME/.config/mpv/input.conf"
+	mkdir -p "$(dirname "$config2")" && cat /dev/null >"$config2"
+
+}
+
 update_nodejs() {
 
 	# Handle parameters
@@ -584,6 +719,52 @@ update_postgresql() {
 
 }
 
+update_pycharm() {
+
+	# Update dependencies
+	sudo apt install -y curl jq
+
+	# Update package
+	current=$(cat "/opt/pycharm/product-info.json" | jq -r ".dataDirectoryName" | grep -oP "(\d.+)" || echo "0.0.0.0")
+	address="https://data.services.jetbrains.com/products/releases?code=PCP&latest=true&type=release"
+	version=$(curl -Ls "$address" | jq -r ".PCP[0].version")
+	present=$([[ -f "/opt/pycharm/bin/pycharm.sh" ]] && echo true || echo false)
+	updated=$(dpkg --compare-versions "$current" "ge" "${version:0:6}" && echo true || echo false)
+	if [[ $updated == false ]]; then
+		address="https://download.jetbrains.com/python/pycharm-professional-$version.tar.gz"
+		package="$(mktemp -d)/$(basename "$address")"
+		curl -LA "mozilla/5.0" "$address" -o "$package"
+		sudo rm -r "/opt/pycharm"
+		tempdir="$(mktemp -d)" && sudo tar -xvf "$package" -C "$tempdir"
+		sudo mv -f $tempdir/pycharm-* "/opt/pycharm"
+		sudo ln -sf "/opt/pycharm/bin/pycharm.sh" "/bin/pycharm"
+		source "$HOME/.bashrc"
+	fi
+
+	# Change desktop
+	desktop="/usr/share/applications/jetbrains-pycharm.desktop"
+	cat /dev/null | sudo tee "$desktop"
+	echo "[Desktop Entry]" | sudo tee -a "$desktop"
+	echo "Version=1.0" | sudo tee -a "$desktop"
+	echo "Type=Application" | sudo tee -a "$desktop"
+	echo "Name=PyCharm" | sudo tee -a "$desktop"
+	echo "Icon=pycharm" | sudo tee -a "$desktop"
+	echo 'Exec="/opt/pycharm/bin/pycharm.sh" %f' | sudo tee -a "$desktop"
+	echo "Comment=Python IDE for Professional Developers" | sudo tee -a "$desktop"
+	echo "Categories=Development;IDE;" | sudo tee -a "$desktop"
+	echo "Terminal=false" | sudo tee -a "$desktop"
+	echo "StartupWMClass=jetbrains-pycharm" | sudo tee -a "$desktop"
+	echo "StartupNotify=true" | sudo tee -a "$desktop"
+
+	# Finish installation
+	# if [[ "$present" == "false" ]]; then
+	# fi
+
+	# TODO: Change project directory
+	# TODO: Change line height
+
+}
+
 update_python() {
 
 	# Update package
@@ -606,94 +787,19 @@ update_python() {
 
 }
 
+update_quickemu() {
+
+	# Update package
+	sudo add-apt-repository -y ppa:flexiondotorg/quickemu
+	sudo apt update && sudo apt install -y quickemu
+
+}
+
 update_system() {
 
 	# Handle parameters
 	country=${1:-Europe/Brussels}
 	machine=${2:-ubuhogen}
-
-	# Change terminal
-	profile=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")
-	deposit="org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$profile/"
-	gsettings set "$deposit" font "Ubuntu Mono 12"
-	gsettings set "$deposit" cell-height-scale 1.1000000000000001
-	gsettings set "$deposit" default-size-columns 96
-	gsettings set "$deposit" default-size-rows 24
-	gsettings set "$deposit" use-theme-colors false
-	gsettings set "$deposit" foreground-color "rgb(208,207,204)"
-	gsettings set "$deposit" background-color "rgb(23,20,33)"
-
-	# Change fonts
-	gsettings set org.gnome.desktop.interface font-name "Ubuntu 10"
-	gsettings set org.gnome.desktop.interface document-font-name "Sans 10"
-	gsettings set org.gnome.desktop.interface monospace-font-name "Ubuntu Mono 12"
-	gsettings set org.gnome.desktop.wm.preferences titlebar-font "Ubuntu Bold 10"
-	gsettings set org.gnome.desktop.wm.preferences titlebar-uses-system-font false
-
-	# Enable night-light
-	gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true
-	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-from 0
-	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-to 0
-	gsettings set org.gnome.settings-daemon.plugins.color night-light-temperature 5000
-
-	# Change dash-to-dock
-	gsettings set org.gnome.shell.extensions.dash-to-dock click-action minimize
-	gsettings set org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 32
-	gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed false
-	gsettings set org.gnome.shell.extensions.dash-to-dock show-trash false
-
-	# Change favorites
-	gsettings set org.gnome.shell favorite-apps "[ \
-		'org.gnome.Nautilus.desktop', \
-		'com.github.Eloston.UngoogledChromium.desktop', \
-		'org.jdownloader.JDownloader.desktop', \
-		'org.gnome.Terminal.desktop', \
-		'code.desktop', \
-		'android-studio.desktop', \
-		'org.keepassxc.KeePassXC.desktop' \
-	]"
-
-	# Remove home directory
-	gsettings set org.gnome.shell.extensions.ding show-home false
-
-	# Change theme
-	gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
-	gsettings set org.gnome.desktop.interface gtk-theme "Yaru-dark"
-
-	# Change icons
-	sudo add-apt-repository -y ppa:papirus/papirus-dev
-	sudo apt update && sudo apt install -y papirus-folders papirus-icon-theme
-	gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
-	sudo papirus-folders --color yaru --theme Papirus-Dark
-
-	# Change desktop
-	sudo apt install -y curl
-	address="https://raw.githubusercontent.com/sharpordie/andpaper/main/src/android-bottom-bright.png"
-	picture="$HOME/Pictures/Backgrounds/$(basename "$address")"
-	mkdir -p "$(dirname $picture)" && curl -L "$address" -o "$picture"
-	# gsettings set org.gnome.desktop.background picture-uri "file://$picture"
-	gsettings set org.gnome.desktop.background picture-uri-dark "file://$picture"
-	gsettings set org.gnome.desktop.background picture-options "zoom"
-
-	# Change screensaver
-	gsettings set org.gnome.desktop.screensaver picture-uri "file://$picture"
-	gsettings set org.gnome.desktop.screensaver picture-options "zoom"
-
-	# Change login
-	sudo apt install -y libglib2.0-dev-bin
-	address="https://github.com/PRATAP-KUMAR/ubuntu-gdm-set-background/archive/main.tar.gz"
-	element="ubuntu-gdm-set-background-main/ubuntu-gdm-set-background"
-	wget -qO - "$address" | tar zx --strip-components=1 "$element"
-	sudo ./ubuntu-gdm-set-background --image "$picture" || rm ./ubuntu-gdm-set-background
-
-	# Remove snap directory
-	! grep -q "snap" "$HOME/.hidden" 2>/dev/null && echo "snap" >>"$HOME/.hidden"
-
-	# Change nautilus
-	gsettings set org.gnome.nautilus.preferences default-folder-viewer "list-view"
-	gsettings set org.gtk.Settings.FileChooser show-hidden false
-	gsettings set org.gtk.Settings.FileChooser sort-directories-first true
-	nautilus -q
 
 	# Change hostname
 	hostnamectl hostname "$machine"
@@ -781,6 +887,25 @@ update_ydotool() {
 
 }
 
+update_yt_dlp() {
+
+	# Update dependencies
+	sudo apt install -y curl
+
+	# Remove package
+	sudo apt autoremove -y --purge yt-dlp
+
+	# Update package
+	current=$(date -r "$(which yt-dlp)" +"%s")
+	maximum=$(date -d "10 days ago" +"%s")
+	updated=$([[ $current -lt $maximum ]] && echo false || echo true)
+	[[ $updated == true ]] && return 0
+	address="https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"
+	package="/usr/local/bin/yt-dlp" && sudo curl -LA "mozilla/5.0" "$address" -o "$package"
+	sudo chmod a+rx "$package"
+
+}
+
 main() {
 
 	# Prompt password
@@ -810,25 +935,33 @@ main() {
 
 	# Handle elements
 	factors=(
+		"update_appearance"
 		"update_system"
 		"update_nvidia"
 
 		"update_android_studio"
 		"update_chromium"
 		"update_git main sharpordie 72373746+sharpordie@users.noreply.github.com"
+		"update_pycharm"
 		"update_vscode"
 
 		"update_docker"
-		"update_jdownloader"
-		"update_keepassxc"
 		"update_flutter"
-		"update_inkscape"
-		"update_lunacy"
+		"update_gh"
 		"update_mambaforge"
 		"update_nodejs"
 		"update_pgadmin"
 		"update_postgresql"
 		"update_python"
+		"update_odoo"
+
+		"update_inkscape"
+		"update_jdownloader"
+		"update_keepassxc"
+		"update_lunacy"
+		"update_mpv"
+		"update_quickemu"
+		"update_yt_dlp"
 	)
 
 	# Output progress

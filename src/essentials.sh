@@ -212,6 +212,9 @@ update_appearance() {
 	# Remove snap directory
 	! grep -q "snap" "$HOME/.hidden" 2>/dev/null && echo "snap" >>"$HOME/.hidden"
 
+	# Remove event-sounds
+	gsettings set org.gnome.desktop.sound event-sounds false
+
 	# Change nautilus
 	gsettings set org.gnome.nautilus.preferences default-folder-viewer "list-view"
 	gsettings set org.gtk.Settings.FileChooser show-hidden false

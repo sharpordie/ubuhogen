@@ -280,10 +280,23 @@ update_chromium_extension() {
 
 }
 
+update_docker() {
+
+	# Update dependencies
+	sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+
+	# Update package
+	curl -fsSL "https://download.docker.com/linux/ubuntu/gpg" | sudo gpg --dearmor --yes -o "/usr/share/keyrings/docker-archive-keyring.gpg"
+	echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+	sudo apt update && sudo apt install -y docker-ce docker-compose-plugin
+	sudo usermod -aG docker $USER
+
+}
+
 update_flutter() {
 
 	# Update dependencies
-	sudo apt -y install build-essential clang cmake curl git libgtk-3-dev ninja-build pkg-config
+	sudo apt install -y build-essential clang cmake curl git libgtk-3-dev ninja-build pkg-config
 
 	# Update package
 	deposit="$HOME/Android/Flutter" && mkdir -p "$deposit"
@@ -291,7 +304,7 @@ update_flutter() {
 
 	# Adjust environment
 	configs="$HOME/.bashrc"
-	if ! grep -q "flutter" "$configs" 2>/dev/null; then
+	if ! grep -q "Flutter" "$configs" 2>/dev/null; then
 		[[ -s "$configs" ]] || touch "$configs"
 		[[ -z $(tail -1 "$configs") ]] || echo "" >>"$configs"
 		echo 'export PATH="$PATH:$HOME/Android/Flutter/bin"' >>"$configs"
@@ -323,11 +336,12 @@ update_flutter() {
 
 update_git() {
 
+	# Handle parameters
 	default=${1:-main}
 	gituser=${2:-anonymous}
 	gitmail=${3:-anonymous@example.org}
 
-	# Update git
+	# Update package
 	sudo add-apt-repository -y ppa:git-core/ppa
 	sudo apt update && sudo apt install -y git
 
@@ -340,15 +354,23 @@ update_git() {
 
 }
 
+update_inkscape() {
+
+	# Update package
+	sudo add-apt-repository -y ppa:inkscape.dev/stable
+	sudo apt update && sudo apt install -y inkscape
+
+}
+
 update_jdownloader() {
 
 	# Handle parameters
 	deposit=${1:-$HOME/Downloads/JD2}
 
 	# Update dependencies
-	sudo apt -y install flatpak jq moreutils
+	sudo apt install -y flatpak jq moreutils
 
-	# Update jdownloader
+	# Update package
 	starter="/var/lib/flatpak/exports/bin/org.jdownloader.JDownloader"
 	present=$([[ -f "$starter" ]] && echo true || echo false)
 	sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
@@ -360,7 +382,7 @@ update_jdownloader() {
 
 	# Change desktop
 	desktop="/var/lib/flatpak/exports/share/applications/org.jdownloader.JDownloader.desktop"
-	sudo sed -i 's/Icon=.*/Icon=jdownloader/' "$desktop"
+	sudo sed -i "s/Icon=.*/Icon=jdownloader/" "$desktop"
 
 	# Change settings
 	if [[ $present = false ]]; then
@@ -386,6 +408,7 @@ update_jdownloader() {
 		jq ".defaultdownloadfolder = \"$deposit\"" "$config2" | sponge "$config2"
 		jq ".enabled = false" "$config3" | sponge "$config3"
 		jq ".enabled = false" "$config4" | sponge "$config4"
+		update_chromium_extension "fbcohnmimjicjdomonkcbcpbpnhggkip"
 	fi
 
 }
@@ -421,6 +444,91 @@ update_jetbrains_plugin() {
 			sleep 1
 		done
 	done
+
+}
+
+update_keepassxc() {
+
+	# Update package
+	sudo add-apt-repository -y ppa:phoerious/keepassxc
+	sudo apt update && sudo apt install -y keepassxc
+
+}
+
+update_lunacy() {
+
+	# Update dependencies
+	sudo apt install curl jq
+
+	# Update package
+	current=$(apt-show-versions lunacy | grep -oP "[\d.]+" | tail -1)
+	address="https://raw.githubusercontent.com/scoopinstaller/extras/master/bucket/lunacy.json"
+	version=$(curl -LA "mozilla/5.0" "$address" | jq -r ".version")
+	updated=$(dpkg --compare-versions "$current" "ge" "$version" && echo true || echo false)
+	if [[ $updated == false ]]; then
+		address="https://lcdn.icons8.com/setup/Lunacy.deb"
+		package="$(mktemp -d)/$(basename "$address")"
+		curl -LA "mozilla/5.0" "$address" -o "$package"
+		sudo apt install -y "$package"
+	fi
+
+	# Change desktop
+	desktop="/usr/share/applications/lunacy.desktop"
+	sudo sed -i "s/Icon=.*/Icon=lunacy/" "$desktop"
+
+}
+
+update_mambaforge() {
+
+	# Handle parameters
+	deposit=${1:-$HOME/.mambaforge}
+
+	# Update dependencies
+	sudo apt install -y curl
+
+	# Update package
+	present=$([[ -x "$(which mamba)" ]] && echo true || echo false)
+	if [[ $present = false ]]; then
+		address="https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
+		fetched="$(mktemp -d)/$(basename "$address")"
+		curl -L "$address" -o "$fetched" && sh "$fetched" -b -p "$deposit"
+	fi
+
+	# Change environment
+	"$deposit/condabin/conda" init
+
+	# Change settings
+	"$deposit/condabin/conda" config --set auto_activate_base false
+
+}
+
+update_nodejs() {
+
+	# Handle parameters
+	version=${1:-16}
+
+	# Update dependencies
+	sudo apt install -y curl gcc g++ make
+
+	# Update package
+	curl -fsSL "https://deb.nodesource.com/setup_$version.x" | sudo -E bash -
+	sudo apt update && sudo apt install -y nodejs
+
+	# Change environment
+	configs="$HOME/.bashrc" && deposit="$HOME/.npm-global"
+	mkdir -p "$deposit" && npm config set prefix "$deposit"
+	if ! grep -q ".npm-global" "$configs" 2>/dev/null; then
+		[[ -s "$configs" ]] || touch "$configs"
+		[[ -z $(tail -1 "$configs") ]] || echo "" >>"$configs"
+		echo 'export PATH="$PATH:$HOME/.npm-global/bin"' >>"$configs"
+		export PATH="$PATH:$HOME/.npm-global/bin"
+	fi
+
+	# Update modules
+	npm install -g pnpm
+
+	# Change settings
+	npm set audit false
 
 }
 
@@ -481,7 +589,8 @@ update_system() {
 		'org.jdownloader.JDownloader.desktop', \
 		'org.gnome.Terminal.desktop', \
 		'code.desktop', \
-		'android-studio.desktop' \
+		'android-studio.desktop', \
+		'org.keepassxc.KeePassXC.desktop' \
 	]"
 
 	# Remove home directory
@@ -555,7 +664,7 @@ update_system() {
 update_vscode() {
 
 	# Update dependencies
-	sudo apt -y install curl fonts-cascadia-code jq moreutils
+	sudo apt install -y curl fonts-cascadia-code jq moreutils
 
 	# Update package
 	present="$([[ -x $(command -v code) ]] && echo true || echo false)"
@@ -649,8 +758,14 @@ main() {
 		"update_git main sharpordie 72373746+sharpordie@users.noreply.github.com"
 		"update_vscode"
 
+		"update_docker"
 		"update_jdownloader"
+		"update_keepassxc"
 		"update_flutter"
+		"update_inkscape"
+		"update_lunacy"
+		"update_mambaforge"
+		"update_nodejs"
 	)
 
 	# Output progress
@@ -669,13 +784,13 @@ main() {
 		printf "$current" "$written" "$elapsed"
 	done
 
-	# Revert timeouts
-	sudo rm "/etc/sudoers.d/disable_timeout"
-
 	# Revert sleeping
 	gsettings set org.gnome.desktop.notifications show-banners true
 	gsettings set org.gnome.desktop.screensaver lock-enabled true
 	gsettings set org.gnome.desktop.session idle-delay 300
+
+	# Revert timeouts
+	sudo rm "/etc/sudoers.d/disable_timeout"
 
 	# Output new line
 	printf "\n"

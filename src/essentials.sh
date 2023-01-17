@@ -319,11 +319,8 @@ update_flutter() {
 	yes | flutter doctor --android-licenses
 
 	# Update vscode
-	present=$([[ -x "$(which code)" ]] && echo true || echo false)
-	if [[ $present == false ]]; then
-		code --install-extension "dart-code.flutter" &>/dev/null
-		code --install-extension "RichardCoutts.mvvm-plus" &>/dev/null
-	fi
+	code --install-extension "dart-code.flutter" --force &>/dev/null
+	code --install-extension "RichardCoutts.mvvm-plus" --force &>/dev/null
 
 	# Update android-studio
 	product=$(find /opt/android-* -maxdepth 0 2>/dev/null | sort -r | head -1)
@@ -524,9 +521,6 @@ update_nodejs() {
 		export PATH="$PATH:$HOME/.npm-global/bin"
 	fi
 
-	# Update modules
-	npm install -g pnpm
-
 	# Change settings
 	npm set audit false
 
@@ -543,6 +537,72 @@ update_nvidia() {
 	package="$(mktemp -d)/$(basename "$address")"
 	curl -LA "mozilla/5.0" "$address" -o "$package" && sudo dpkg -i "$package"
 	sudo apt update && sudo apt install -y cuda
+
+}
+
+update_odoo() {
+
+	# Update dependencies
+	(update_nodejs && update_postgresql && update_python && update_pycharm) || return 1
+
+	# Update nodejs
+	npm install -g rtlcss
+
+	# Update wkhtmltopdf
+
+	# Update pycharm
+	product=$(find /opt/pycharm -maxdepth 0 2>/dev/null | sort -r | head -1)
+	update_jetbrains_plugin "$product" "10037" # csv-editor
+	update_jetbrains_plugin "$product" "12478" # xpathview-xslt
+	update_jetbrains_plugin "$product" "13499" # odoo
+
+	# Update vscode
+	code --install-extension "jigar-patel.odoosnippets" --force &>/dev/null
+
+}
+
+update_pgadmin() {
+
+	# Update dependencies
+	sudo apt install -y curl
+
+	# Update package
+	curl -fsSL https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo gpg --yes --dearmor -o /etc/apt/trusted.gpg.d/pgadmin.gpg
+	sudo sh -c 'echo "deb https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/$(lsb_release -cs) pgadmin4 main" > /etc/apt/sources.list.d/pgadmin4.list'
+	sudo apt update && sudo apt install -y pgadmin4
+
+}
+
+update_postgresql() {
+
+	# Update package
+	sudo apt install -y postgresql postgresql-client
+
+	# Change settings
+	sudo su - postgres -c "createuser $USER"
+	createdb "$USER" || return 0
+
+}
+
+update_python() {
+
+	# Update package
+	sudo apt install -y python3 python3-dev python3-venv
+
+	# Change environment
+	configs="$HOME/.bashrc"
+	if ! grep -q "PYTHONDONTWRITEBYTECODE" "$configs" 2>/dev/null; then
+		[[ -s "$configs" ]] || touch "$configs"
+		[[ -z $(tail -1 "$configs") ]] || echo "" >>"$configs"
+		echo 'export PYTHONDONTWRITEBYTECODE=1' >>"$configs"
+		echo 'export PATH="$HOME/.local/bin:$PATH"' >>"$configs"
+		export PYTHONDONTWRITEBYTECODE=1
+		export PATH="$PATH:$HOME/.local/bin"
+	fi
+
+	# Update poetry
+	curl -sSL https://install.python-poetry.org | python3 -
+	"$HOME/.local/bin/poetry" config virtualenvs.in-project true
 
 }
 
@@ -750,22 +810,25 @@ main() {
 
 	# Handle elements
 	factors=(
-		"update_system"
-		"update_nvidia"
+		# "update_system"
+		# "update_nvidia"
 
-		"update_android_studio"
-		"update_chromium"
-		"update_git main sharpordie 72373746+sharpordie@users.noreply.github.com"
-		"update_vscode"
+		# "update_android_studio"
+		# "update_chromium"
+		# "update_git main sharpordie 72373746+sharpordie@users.noreply.github.com"
+		# "update_vscode"
 
-		"update_docker"
-		"update_jdownloader"
-		"update_keepassxc"
-		"update_flutter"
-		"update_inkscape"
-		"update_lunacy"
-		"update_mambaforge"
-		"update_nodejs"
+		# "update_docker"
+		# "update_jdownloader"
+		# "update_keepassxc"
+		# "update_flutter"
+		# "update_inkscape"
+		# "update_lunacy"
+		# "update_mambaforge"
+		# "update_nodejs"
+		"update_pgadmin"
+		"update_postgresql"
+		# "update_python"
 	)
 
 	# Output progress

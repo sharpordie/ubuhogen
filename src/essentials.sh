@@ -3,7 +3,7 @@
 update_android_cmdline() {
 
 	# Update dependencies
-	sudo apt install -y default-jdk
+	sudo apt install -y openjdk-8-jdk
 
 	# Update package
 	sdkroot="$HOME/Android/Sdk"
@@ -90,7 +90,7 @@ update_android_studio() {
 	[[ $release = can* ]] && sudo sed -i "s/Name=.*/Name=Android Studio Canary/" "$desktop"
 
 	# TODO: Change settings
-	# update_jetbrains_config "Android" "directory" "$deposit"
+	# mkdir -p "$deposit" && update_jetbrains_config "Android" "directory" "$deposit"
 	# update_jetbrains_config "Android" "font_size" "14"
 	# update_jetbrains_config "Android" "line_size" "1.5"
 	# [[ $release = can* ]] && update_jetbrains_config "AndroidPreview" "newest_ui" "true"
@@ -135,7 +135,6 @@ update_appearance() {
 	# Change terminal
 	profile=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")
 	deposit="org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$profile/"
-	gsettings set "$deposit" font "Ubuntu Mono 12"
 	gsettings set "$deposit" cell-height-scale 1.1000000000000001
 	gsettings set "$deposit" default-size-columns 96
 	gsettings set "$deposit" default-size-rows 24
@@ -239,11 +238,11 @@ update_chromium() {
 	sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 	sudo flatpak remote-modify --enable flathub
 	flatpak install -y flathub com.github.Eloston.UngoogledChromium
+	update-desktop-database .
 
 	# Change default browser
 	xdg-settings set default-web-browser "com.github.Eloston.UngoogledChromium.desktop"
-	xdg-settings check default-web-browser "com.github.Eloston.UngoogledChromium.desktop"
-	# xdg-mime default "com.github.Eloston.UngoogledChromium.desktop" x-scheme-handler/https x-scheme-handler/http
+	# xdg-settings check default-web-browser "com.github.Eloston.UngoogledChromium.desktop"
 
 	# Change environment
 	configs="$HOME/.bashrc"
@@ -441,19 +440,18 @@ update_git() {
 
 	# Handle parameters
 	default=${1:-main}
-	gituser=${2:-anonymous}
-	gitmail=${3:-anonymous@example.org}
+	gituser=${2}
+	gitmail=${3}
 
 	# Update package
 	sudo add-apt-repository -y ppa:git-core/ppa
 	sudo apt update && sudo apt install -y git
 
 	# Change settings
-	git config --global credential.helper "store"
+	[[ -n "$gitmail" ]] && git config --global user.email "$gitmail"
+	[[ -n "$gituser" ]] && git config --global user.name "$gituser"
 	git config --global http.postBuffer 1048576000
 	git config --global init.defaultBranch "$default"
-	git config --global user.email "$gitmail"
-	git config --global user.name "$gituser"
 
 }
 
@@ -479,6 +477,7 @@ update_jdownloader() {
 	sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 	sudo flatpak remote-modify --enable flathub
 	flatpak install -y flathub org.jdownloader.JDownloader
+	update-desktop-database .
 
 	# Create deposit
 	mkdir -p "$deposit"
@@ -671,6 +670,11 @@ update_nvidia() {
 	[[ $(lspci | grep -e VGA) == *"NVIDIA"* ]] || return 1
 	sudo apt install -y linux-headers-$(uname -r)
 
+	# Change default java
+	sudo apt install -y openjdk-8-jdk
+	# sudo update-alternatives --install /usr/bin/java java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java 10
+	sudo update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
+
 	# Update package
 	address="https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.0-1_all.deb"
 	package="$(mktemp -d)/$(basename "$address")"
@@ -725,6 +729,9 @@ update_postgresql() {
 
 update_pycharm() {
 
+	# Handle parameters
+	deposit=${1:-$HOME/Projects}
+
 	# Update dependencies
 	sudo apt install -y curl jq
 
@@ -760,12 +767,14 @@ update_pycharm() {
 	echo "StartupWMClass=jetbrains-pycharm" | sudo tee -a "$desktop"
 	echo "StartupNotify=true" | sudo tee -a "$desktop"
 
+	# TODO: Change settings
+	# mkdir -p "$deposit" && update_jetbrains_config "PyCharm" "directory" "$deposit"
+	# update_jetbrains_config "PyCharm" "font_size" "14"
+	# update_jetbrains_config "PyCharm" "line_size" "1.5"
+
 	# Finish installation
 	# if [[ "$present" == "false" ]]; then
 	# fi
-
-	# TODO: Change project directory
-	# TODO: Change line height
 
 }
 
@@ -850,6 +859,10 @@ update_vscode() {
 	code --install-extension foxundermoon.shell-format --force
 	code --install-extension github.github-vscode-theme --force
 
+	# Change default editor
+	git config --global core.editor "code --wait"
+	xdg-mime default "code.desktop" text/plain
+
 	# Change settings
 	configs="$HOME/.config/Code/User/settings.json"
 	[[ -s "$configs" ]] || echo "{}" >"$configs"
@@ -885,9 +898,10 @@ update_ydotool() {
 	maximum=$(date -d "10 days ago" +"%s")
 	updated=$([[ $current -lt $maximum ]] && echo false || echo true)
 	[[ $updated == true ]] && return 0
-	tempdir=$(dirname "$(readlink -f "$0")") && git clone "https://github.com/ReimuNotMoe/ydotool.git"
-	cd ydotool && mkdir build && cd build && cmake .. && make && sudo make install
-	rm -rf ydotool && cd "$tempdir" && source "$HOME/.bashrc"
+	current=$(dirname "$(readlink -f "$0")") && tempdir=$(mktemp -d)
+	git clone "https://github.com/ReimuNotMoe/ydotool.git" "$tempdir"
+	cd "$tempdir" && mkdir build && cd build && cmake .. && make && sudo make install
+	cd "$current" && source "$HOME/.bashrc"
 
 }
 
@@ -941,11 +955,12 @@ main() {
 	factors=(
 		"update_appearance"
 		"update_system"
+		"update_git main sharpordie 72373746+sharpordie@users.noreply.github.com"
+		"update_ydotool"
 		"update_nvidia"
 
 		"update_android_studio"
 		"update_chromium"
-		"update_git main sharpordie 72373746+sharpordie@users.noreply.github.com"
 		"update_pycharm"
 		"update_vscode"
 
@@ -957,13 +972,13 @@ main() {
 		"update_pgadmin"
 		"update_postgresql"
 		"update_python"
-		"update_odoo"
 
 		"update_inkscape"
 		"update_jdownloader"
 		"update_keepassxc"
 		"update_lunacy"
 		"update_mpv"
+		"update_odoo"
 		"update_quickemu"
 		"update_yt_dlp"
 	)

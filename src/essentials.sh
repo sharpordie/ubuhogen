@@ -172,6 +172,7 @@ update_appearance() {
 		'jetbrains-pycharm.desktop', \
 		'pgadmin4.desktop', \
 		'lunacy.desktop', \
+		'figma-linux.desktop', \
 		'mpv.desktop', \
 		'org.keepassxc.KeePassXC.desktop' \
 	]"
@@ -238,7 +239,7 @@ update_chromium() {
 	sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 	sudo flatpak remote-modify --enable flathub
 	flatpak install -y flathub com.github.Eloston.UngoogledChromium
-	update-desktop-database .
+	sudo update-desktop-database
 
 	# Change default browser
 	xdg-settings set default-web-browser "com.github.Eloston.UngoogledChromium.desktop"
@@ -385,6 +386,19 @@ update_docker() {
 
 }
 
+update_figma() {
+
+	# Update package
+	sudo add-apt-repository -y ppa:chrdevs/figma
+	sudo apt update && sudo apt install -y figma-linux libgconf-2-4
+	sudo chmod a+x /opt/figma-linux/figma-linux
+
+	# Change desktop
+	desktop="/usr/share/applications/figma-linux.desktop"
+	sudo sed -i "s/Name=.*/Name=Figma/" "$desktop"
+
+}
+
 update_flutter() {
 
 	# Update dependencies
@@ -477,7 +491,7 @@ update_jdownloader() {
 	sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 	sudo flatpak remote-modify --enable flathub
 	flatpak install -y flathub org.jdownloader.JDownloader
-	update-desktop-database .
+	sudo update-desktop-database
 
 	# Create deposit
 	mkdir -p "$deposit"
@@ -808,6 +822,13 @@ update_quickemu() {
 
 }
 
+update_scrcpy() {
+
+	# Update package
+	sudo snap install scrcpy
+
+}
+
 update_system() {
 
 	# Handle parameters
@@ -835,7 +856,7 @@ update_system() {
 	# Update system
 	sudo apt update
 	sudo apt upgrade -y
-	sudo apt dist-upgrade -y
+	sudo apt full-upgrade -y
 	sudo apt autoremove -y
 
 }
@@ -973,6 +994,7 @@ main() {
 		"update_postgresql"
 		"update_python"
 
+		"update_figma"
 		"update_inkscape"
 		"update_jdownloader"
 		"update_keepassxc"
@@ -980,6 +1002,7 @@ main() {
 		"update_mpv"
 		"update_odoo"
 		"update_quickemu"
+		"update_scrcpy"
 		"update_yt_dlp"
 	)
 

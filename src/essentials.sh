@@ -10,6 +10,7 @@ update_android_cmdline() {
 	tempdir="$sdkroot/cmdline-tools"
 	if [[ ! -d "$tempdir" ]]; then
 		mkdir -p "$tempdir"
+		! grep -q "Android" "$HOME/.hidden" 2>/dev/null && echo "Android" >>"$HOME/.hidden"
 		address="https://developer.android.com/studio#command-tools"
 		version="$(curl -s "$address" | grep -oP "commandlinetools-linux-\K(\d+)" | head -1)"
 		address="https://dl.google.com/android/repository/commandlinetools-linux-${version}_latest.zip"
@@ -19,9 +20,6 @@ update_android_cmdline() {
 		yes | "$tempdir/cmdline-tools/bin/sdkmanager" --sdk_root="$sdkroot" "cmdline-tools;latest"
 		rm -rf "$tempdir/cmdline-tools"
 	fi
-
-	# Remove Android directory
-	! grep -q "Android" "$HOME/.hidden" 2>/dev/null && echo "Android" >>"$HOME/.hidden"
 
 	# Change environment
 	configs="$HOME/.bashrc"
@@ -563,6 +561,46 @@ update_jetbrains_plugin() {
 
 }
 
+update_joal() {
+
+	# Update dependencies
+	sudo apt -y install curl jq libfuse2
+
+	# Update package
+	address="https://api.github.com/repos/anthonyraymond/joal-desktop/releases/latest"
+	version=$(curl -LA "mozilla/5.0" "$address" | jq -r ".tag_name" | tr -d "v")
+	current=$(cat "$HOME/Applications/JoalDesktop-*.AppImage" | grep -oP "[\d.]+" | tail -1)
+	updated=$(dpkg --compare-versions "$current" "ge" "$version" && echo true || echo false)
+	if [[ $updated = false ]]; then
+		address="https://github.com/anthonyraymond/joal-desktop/releases"
+		address="$address/download/v$version/JoalDesktop-$version-linux-x86_64.AppImage"
+		package="$HOME/Applications/JoalDesktop-$version.AppImage"
+		mkdir -p "$HOME/Applications"
+		! grep -q "Applications" "$HOME/.hidden" 2>/dev/null && echo "Applications" >>"$HOME/.hidden"
+		rm -f "$HOME/Applications/JoalDesktop-*.AppImage"
+		curl -LA "mozilla/5.0" "$address" -o "$package" && chmod +x "$package"
+	fi
+
+	# Change desktop
+	desktop="/usr/share/applications/joal-desktop.desktop"
+	cat /dev/null | sudo tee "$desktop"
+	echo "[Desktop Entry]" | sudo tee -a "$desktop"
+	echo "Name=Joal" | sudo tee -a "$desktop"
+	echo "Exec=$HOME/Applications/JoalDesktop-$version.AppImage --no-sandbox %U" | sudo tee -a "$desktop"
+	echo "Terminal=false" | sudo tee -a "$desktop"
+	echo "Type=Application" | sudo tee -a "$desktop"
+	# echo "Icon=appimagekit_e04f1b5d20cd264756ff6ab87e146149_joal-desktop" | sudo tee -a "$desktop"
+	echo "Icon=downloader-arrow" | sudo tee -a "$desktop"
+	echo "StartupWMClass=JoalDesktop" | sudo tee -a "$desktop"
+	echo "X-AppImage-Version=$version" | sudo tee -a "$desktop"
+	echo "Comment=A tool to fake your torrent tracker upload" | sudo tee -a "$desktop"
+	echo "Categories=Utility;" | sudo tee -a "$desktop"
+	echo "TryExec=$HOME/Applications/JoalDesktop-$version.AppImage" | sudo tee -a "$desktop"
+	# echo "X-AppImage-Old-Icon=joal-desktop" | sudo tee -a "$desktop"
+	# echo "X-AppImage-Identifier=e04f1b5d20cd264756ff6ab87e146149" | sudo tee -a "$desktop"
+
+}
+
 update_keepassxc() {
 
 	# Update package
@@ -997,6 +1035,7 @@ main() {
 		"update_figma"
 		"update_inkscape"
 		"update_jdownloader"
+		"update_joal"
 		"update_keepassxc"
 		"update_lunacy"
 		"update_mpv"

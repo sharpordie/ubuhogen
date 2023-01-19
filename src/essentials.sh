@@ -164,6 +164,7 @@ update_appearance() {
 		'org.gnome.Nautilus.desktop', \
 		'com.github.Eloston.UngoogledChromium.desktop', \
 		'org.jdownloader.JDownloader.desktop', \
+		'transmission-gtk.desktop', \
 		'org.gnome.Terminal.desktop', \
 		'code.desktop', \
 		'android-studio.desktop', \
@@ -371,6 +372,23 @@ update_chromium_extension() {
 
 }
 
+update_converseen() {
+
+	# Update package
+	sudo add-apt-repository -y ppa:ubuntuhandbook1/apps
+	sudo apt update && sudo apt install -y converseen
+
+}
+
+update_darktable() {
+
+	# Update package
+	echo "deb http://download.opensuse.org/repositories/graphics:/darktable/xUbuntu_22.04/ /" | sudo tee /etc/apt/sources.list.d/graphics:darktable.list
+	curl -fsSL https://download.opensuse.org/repositories/graphics:darktable/xUbuntu_22.04/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/graphics_darktable.gpg > /dev/null
+	sudo apt update && sudo apt install -y darktable
+
+}
+
 update_docker() {
 
 	# Update dependencies
@@ -569,7 +587,7 @@ update_joal() {
 	# Update package
 	address="https://api.github.com/repos/anthonyraymond/joal-desktop/releases/latest"
 	version=$(curl -LA "mozilla/5.0" "$address" | jq -r ".tag_name" | tr -d "v")
-	current=$(cat "$HOME/Applications/JoalDesktop-*.AppImage" | grep -oP "[\d.]+" | tail -1)
+	current=$(find $HOME/Applications/JoalDesktop-*.AppImage | grep -oP "[\d.]+(?=.App)" | head -1)
 	updated=$(dpkg --compare-versions "$current" "ge" "$version" && echo true || echo false)
 	if [[ $updated = false ]]; then
 		address="https://github.com/anthonyraymond/joal-desktop/releases"
@@ -653,6 +671,15 @@ update_mambaforge() {
 
 	# Change settings
 	"$deposit/condabin/conda" config --set auto_activate_base false
+
+}
+
+update_mkvtoolnix() {
+
+	# Update package
+	sudo sh -c 'echo "deb https://mkvtoolnix.download/ubuntu/ $(lsb_release -sc) main" >> /etc/apt/sources.list.d/bunkus.org.list'
+	wget -q -O - https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt | sudo apt-key add -
+	sudo apt update && sudo apt install -y mkvtoolnix mkvtoolnix-gui
 
 }
 
@@ -899,6 +926,31 @@ update_system() {
 
 }
 
+update_transmission() {
+
+	# Handle parameters
+	deposit=${1:-$HOME/Downloads/P2P}
+	seeding=${2:-0.1}
+
+	# Update dependencies
+	sudo apt install -y jq moreutils 
+
+	# Update package
+	sudo apt install -y transmission
+
+	# Change settings
+	configs="$HOME/.config/transmission/settings.json"
+	mkdir -p "$(dirname "$configs")" "$deposit/Incomplete"
+	[[ -s "$configs" ]] || echo "{}" >"$configs"
+	jq '."incomplete-dir-enabled" = true' "$configs" | sponge "$configs"
+	jq '."ratio-limit-enabled" = true' "$configs" | sponge "$configs"
+	jq '."user-has-given-informed-consent" = true' "$configs" | sponge "$configs"
+	jq ".\"download-dir\" = \"$deposit\"" "$configs" | sponge "$configs"
+	jq ".\"incomplete-dir\" = \"$deposit/Incomplete\"" "$configs" | sponge "$configs"
+	jq ".\"ratio-limit\" = $seeding" "$configs" | sponge "$configs"
+
+}
+
 update_vscode() {
 
 	# Update dependencies
@@ -1032,16 +1084,20 @@ main() {
 		"update_postgresql"
 		"update_python"
 
+		"update_converseen"
+		"update_darktable"
 		"update_figma"
 		"update_inkscape"
 		"update_jdownloader"
 		"update_joal"
 		"update_keepassxc"
 		"update_lunacy"
+		"update_mkvtoolnix"
 		"update_mpv"
 		"update_odoo"
 		"update_quickemu"
 		"update_scrcpy"
+		"update_transmission"
 		"update_yt_dlp"
 	)
 

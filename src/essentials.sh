@@ -630,7 +630,7 @@ update_keepassxc() {
 update_lunacy() {
 
 	# Update dependencies
-	sudo apt install curl jq
+	sudo apt install apt-show-versions curl jq
 
 	# Update package
 	current=$(apt-show-versions lunacy | grep -oP "[\d.]+" | tail -1)

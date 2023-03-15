@@ -6,10 +6,23 @@ Opinionated post-installation script for Ubuntu 22.04.
 
 # <samp>GUIDANCE</samp>
 
-## One-command execution
-
-Running this blindly is strongly discouraged.
+Blindly executing this is strongly discouraged.
 
 ```shell
 wget -qO- https://raw.githubusercontent.com/sharpordie/ubuhogen/HEAD/src/essentials.sh | bash
+```
+
+# <samp>FUNDINGS</samp>
+
+Support my work by sending me some crypto.
+
+```txt
+ADA: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+BAT: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+BCH: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+BTC: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ETH: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+LTC: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+XMR: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ZEC: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```

@@ -1102,20 +1102,20 @@ main() {
 	)
 
 	# Output progress
-	# Output progress
-	local maximum=$((${#welcome} / $(echo "$welcome" | wc -l)))
-	local heading="\r%-"$((maximum - 20))"s   %-6s   %-8s\n\n"
-	local loading="\r%-"$((maximum - 20))"s   \033[93mACTIVE\033[0m   %-8s\b"
-	local failure="\r%-"$((maximum - 20))"s   \033[91mFAILED\033[0m   %-8s\n"
-	local success="\r%-"$((maximum - 20))"s   \033[92mWORKED\033[0m   %-8s\n"
-	printf "$heading" "FUNCTION" "STATUS" "DURATION"
+	local bigness=$((${#welcome} / $(echo "$welcome" | wc -l)))
+	local heading="\r%-"$((bigness - 19))"s   %-5s   %-8s\n\n"
+	local loading="\033[93m\r%-"$((bigness - 19))"s   %02d/%02d   %-8s\b\033[0m"
+	local failure="\033[91m\r%-"$((bigness - 19))"s   %02d/%02d   %-8s\n\033[0m"
+	local success="\033[92m\r%-"$((bigness - 19))"s   %02d/%02d   %-8s\n\033[0m"
+	printf "$heading" "FUNCTION" "ITEMS" "DURATION"
+	local minimum=1 && local maximum=${#members[@]}
 	for element in "${members[@]}"; do
-		local written=$(basename "$(echo "$element" | cut -d ' ' -f 1)" | tr "[:lower:]" "[:upper:]")
-		local started=$(date +"%s") && printf "$loading" "$written" "--:--:--"
-		eval "$element" >/dev/null 2>&1 && current="$success" || current="$failure"
+		local written=$(basename "$(echo "$element" | cut -d "'" -f 1)" | tr "[:lower:]" "[:upper:]")
+		local started=$(date +"%s") && printf "$loading" "$written" "$minimum" "$maximum" "--:--:--"
+		eval "$element" >/dev/null 2>&1 && local current="$success" || local current="$failure"
 		local extinct=$(date +"%s") && elapsed=$((extinct - started))
 		local elapsed=$(printf "%02d:%02d:%02d\n" $((elapsed / 3600)) $(((elapsed % 3600) / 60)) $((elapsed % 60)))
-		printf "$current" "$written" "$elapsed"
+		printf "$current" "$written" "$minimum" "$maximum" "$elapsed" && ((minimum++))
 	done
 
 	# Revert sleeping

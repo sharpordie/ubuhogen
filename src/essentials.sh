@@ -1068,12 +1068,12 @@ main() {
 		"update_system"
 		"update_git main sharpordie 72373746+sharpordie@users.noreply.github.com"
 		"update_ydotool"
-		"update_nvidia"
+		# "update_nvidia"
 
 		"update_android_studio"
 		"update_chromium"
-		"update_pycharm"
-		"update_vscode"
+		# "update_pycharm"
+		# "update_vscode"
 
 		"update_docker"
 		"update_flutter"
@@ -1082,38 +1082,39 @@ main() {
 		"update_nodejs"
 		"update_pgadmin"
 		"update_postgresql"
-		"update_python"
+		# "update_python"
 
-		"update_converseen"
-		"update_darktable"
-		"update_figma"
+		# "update_converseen"
+		# "update_darktable"
+		# "update_figma"
 		"update_inkscape"
 		"update_jdownloader"
-		"update_joal"
-		"update_keepassxc"
-		"update_lunacy"
+		# "update_joal"
+		# "update_keepassxc"
+		# "update_lunacy"
 		"update_mkvtoolnix"
-		"update_mpv"
-		"update_odoo"
-		"update_quickemu"
-		"update_scrcpy"
-		"update_transmission"
-		"update_yt_dlp"
+		# "update_mpv"
+		# "update_odoo"
+		# "update_quickemu"
+		# "update_scrcpy"
+		# "update_transmission"
+		# "update_yt_dlp"
 	)
 
 	# Output progress
-	maximum=$((${#welcome} / $(echo "$welcome" | wc -l)))
-	heading="\r%-"$((maximum - 20))"s   %-6s   %-8s\n\n"
-	loading="\r%-"$((maximum - 20))"s   \033[93mACTIVE\033[0m   %-8s\b"
-	failure="\r%-"$((maximum - 20))"s   \033[91mFAILED\033[0m   %-8s\n"
-	success="\r%-"$((maximum - 20))"s   \033[92mWORKED\033[0m   %-8s\n"
+	# Output progress
+	local maximum=$((${#welcome} / $(echo "$welcome" | wc -l)))
+	local heading="\r%-"$((maximum - 20))"s   %-6s   %-8s\n\n"
+	local loading="\r%-"$((maximum - 20))"s   \033[93mACTIVE\033[0m   %-8s\b"
+	local failure="\r%-"$((maximum - 20))"s   \033[91mFAILED\033[0m   %-8s\n"
+	local success="\r%-"$((maximum - 20))"s   \033[92mWORKED\033[0m   %-8s\n"
 	printf "$heading" "FUNCTION" "STATUS" "DURATION"
-	for element in "${factors[@]}"; do
-		written=$(basename "$(echo "$element" | cut -d ' ' -f 1)" | tr "[:lower:]" "[:upper:]")
-		started=$(date +"%s") && printf "$loading" "$written" "--:--:--"
+	for element in "${members[@]}"; do
+		local written=$(basename "$(echo "$element" | cut -d ' ' -f 1)" | tr "[:lower:]" "[:upper:]")
+		local started=$(date +"%s") && printf "$loading" "$written" "--:--:--"
 		eval "$element" >/dev/null 2>&1 && current="$success" || current="$failure"
-		extinct=$(date +"%s") && elapsed=$((extinct - started))
-		elapsed=$(printf "%02d:%02d:%02d\n" $((elapsed / 3600)) $(((elapsed % 3600) / 60)) $((elapsed % 60)))
+		local extinct=$(date +"%s") && elapsed=$((extinct - started))
+		local elapsed=$(printf "%02d:%02d:%02d\n" $((elapsed / 3600)) $(((elapsed % 3600) / 60)) $((elapsed % 60)))
 		printf "$current" "$written" "$elapsed"
 	done
 

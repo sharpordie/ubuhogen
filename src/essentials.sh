@@ -6,15 +6,15 @@ update_android_cmdline() {
 	sudo apt install -y openjdk-8-jdk
 
 	# Update package
-	sdkroot="$HOME/Android/Sdk"
-	tempdir="$sdkroot/cmdline-tools"
+	local sdkroot="$HOME/Android/Sdk"
+	local tempdir="$sdkroot/cmdline-tools"
 	if [[ ! -d "$tempdir" ]]; then
 		mkdir -p "$tempdir"
 		! grep -q "Android" "$HOME/.hidden" 2>/dev/null && echo "Android" >>"$HOME/.hidden"
-		address="https://developer.android.com/studio#command-tools"
-		version="$(curl -s "$address" | grep -oP "commandlinetools-linux-\K(\d+)" | head -1)"
-		address="https://dl.google.com/android/repository/commandlinetools-linux-${version}_latest.zip"
-		archive="$(mktemp -d)/$(basename "$address")"
+		local address="https://developer.android.com/studio#command-tools"
+		local version="$(curl -s "$address" | grep -oP "commandlinetools-linux-\K(\d+)" | head -1)"
+		local address="https://dl.google.com/android/repository/commandlinetools-linux-${version}_latest.zip"
+		local archive="$(mktemp -d)/$(basename "$address")"
 		curl -LA "mozilla/5.0" "$address" -o "$archive"
 		unzip -d "$tempdir" "$archive"
 		yes | "$tempdir/cmdline-tools/bin/sdkmanager" --sdk_root="$sdkroot" "cmdline-tools;latest"
@@ -22,7 +22,7 @@ update_android_cmdline() {
 	fi
 
 	# Change environment
-	configs="$HOME/.bashrc"
+	local configs="$HOME/.bashrc"
 	if ! grep -q "ANDROID_HOME" "$configs" 2>/dev/null; then
 		[[ -s "$configs" ]] || touch "$configs"
 		[[ -z $(tail -1 "$configs") ]] || echo "" >>"$configs"
@@ -41,8 +41,8 @@ update_android_cmdline() {
 update_android_studio() {
 
 	# Handle parameters
-	release=${1:-stable}
-	deposit=${2:-$HOME/Projects}
+	local release=${1:-stable}
+	local deposit=${2:-$HOME/Projects}
 
 	# Update dependencies
 	sudo apt install -y bridge-utils curl libvirt-clients libvirt-daemon-system qemu-kvm
@@ -52,17 +52,17 @@ update_android_studio() {
 	[[ $release = sta* ]] && payload="android-studio"
 	[[ $release = bet* ]] && payload="android-studio-beta"
 	[[ $release = can* ]] && payload="android-studio-canary"
-	address="https://aur.archlinux.org/packages/$payload"
-	version=$(curl -s "$address" | grep -oP "android-studio.* \K(\d.+)(?=-)" | head -1)
-	current=$(cat "/opt/$payload/product-info.json" | jq -r ".dataDirectoryName" | grep -oP "(\d.+)" || echo "0.0.0.0")
-	present=$([[ -f "/opt/$payload/bin/studio.sh" ]] && echo true || echo false)
-	updated=$(dpkg --compare-versions "$current" "ge" "${version:0:6}" && echo true || echo false)
+	local address="https://aur.archlinux.org/packages/$payload"
+	local version=$(curl -s "$address" | grep -oP "android-studio.* \K(\d.+)(?=-)" | head -1)
+	local current=$(cat "/opt/$payload/product-info.json" | jq -r ".dataDirectoryName" | grep -oP "(\d.+)" || echo "0.0.0.0")
+	local present=$([[ -f "/opt/$payload/bin/studio.sh" ]] && echo true || echo false)
+	local updated=$(dpkg --compare-versions "$current" "ge" "${version:0:6}" && echo true || echo false)
 	if [[ $updated == false ]]; then
-		address="https://dl.google.com/dl/android/studio/ide-zips/$version/android-studio-$version-linux.tar.gz"
-		package="$(mktemp -d)/$(basename "$address")"
+		local address="https://dl.google.com/dl/android/studio/ide-zips/$version/android-studio-$version-linux.tar.gz"
+		local package="$(mktemp -d)/$(basename "$address")"
 		curl -LA "mozilla/5.0" "$address" -o "$package"
 		sudo rm -r "/opt/$payload"
-		tempdir="$(mktemp -d)" && sudo tar -xvf "$package" -C "$tempdir"
+		local tempdir="$(mktemp -d)" && sudo tar -xvf "$package" -C "$tempdir"
 		sudo mv -f "$tempdir/android-studio" "/opt/$payload"
 		sudo ln -fs "/opt/$payload/bin/studio.sh" "/bin/$payload"
 		source "$HOME/.bashrc"
@@ -70,7 +70,7 @@ update_android_studio() {
 
 	# Create desktop
 	sudo rm "/usr/share/applications/jetbrains-studio.desktop"
-	desktop="/usr/share/applications/$payload.desktop"
+	local desktop="/usr/share/applications/$payload.desktop"
 	cat /dev/null | sudo tee "$desktop"
 	echo "[Desktop Entry]" | sudo tee -a "$desktop"
 	echo "Version=1.0" | sudo tee -a "$desktop"
@@ -131,8 +131,8 @@ update_android_studio() {
 update_appearance() {
 
 	# Change terminal
-	profile=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")
-	deposit="org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$profile/"
+	local profile=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")
+	local deposit="org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$profile/"
 	gsettings set "$deposit" cell-height-scale 1.1000000000000001
 	gsettings set "$deposit" default-size-columns 96
 	gsettings set "$deposit" default-size-rows 24
@@ -191,8 +191,8 @@ update_appearance() {
 
 	# Change desktop
 	sudo apt install -y curl
-	address="https://raw.githubusercontent.com/sharpordie/andpaper/main/src/android-bottom-bright.png"
-	picture="$HOME/Pictures/Backgrounds/$(basename "$address")"
+	local address="https://raw.githubusercontent.com/sharpordie/andpaper/main/src/android-bottom-bright.png"
+	local picture="$HOME/Pictures/Backgrounds/$(basename "$address")"
 	mkdir -p "$(dirname $picture)" && curl -L "$address" -o "$picture"
 	# gsettings set org.gnome.desktop.background picture-uri "file://$picture"
 	gsettings set org.gnome.desktop.background picture-uri-dark "file://$picture"
@@ -204,8 +204,8 @@ update_appearance() {
 
 	# Change login
 	sudo apt install -y libglib2.0-dev-bin
-	address="https://github.com/PRATAP-KUMAR/ubuntu-gdm-set-background/archive/main.tar.gz"
-	element="ubuntu-gdm-set-background-main/ubuntu-gdm-set-background"
+	local address="https://github.com/PRATAP-KUMAR/ubuntu-gdm-set-background/archive/main.tar.gz"
+	local element="ubuntu-gdm-set-background-main/ubuntu-gdm-set-background"
 	wget -qO - "$address" | tar zx --strip-components=1 "$element"
 	sudo ./ubuntu-gdm-set-background --image "$picture" || rm ./ubuntu-gdm-set-background
 
@@ -225,16 +225,16 @@ update_appearance() {
 update_chromium() {
 
 	# Handle parameters
-	deposit=${1:-$HOME/Downloads/DDL}
-	startup=${2:-about:blank}
+	local deposit=${1:-$HOME/Downloads/DDL}
+	local startup=${2:-about:blank}
 
 	# Update dependencies
 	update_ydotool || return 1
 	sudo apt install -y curl flatpak jq
 
 	# Update package
-	starter="/var/lib/flatpak/exports/bin/com.github.Eloston.UngoogledChromium"
-	present=$([[ -f "$starter" ]] && echo true || echo false)
+	local starter="/var/lib/flatpak/exports/bin/com.github.Eloston.UngoogledChromium"
+	local present=$([[ -f "$starter" ]] && echo true || echo false)
 	sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 	sudo flatpak remote-modify --enable flathub
 	flatpak install -y flathub com.github.Eloston.UngoogledChromium
@@ -245,7 +245,7 @@ update_chromium() {
 	# xdg-settings check default-web-browser "com.github.Eloston.UngoogledChromium.desktop"
 
 	# Change environment
-	configs="$HOME/.bashrc"
+	local configs="$HOME/.bashrc"
 	if ! grep -q "CHROME_EXECUTABLE" "$configs" 2>/dev/null; then
 		[[ -s "$configs" ]] || touch "$configs"
 		[[ -z $(tail -1 "$configs") ]] || echo "" >>"$configs"
@@ -323,9 +323,9 @@ update_chromium() {
 		sleep 4 && sudo ydotool key 56:1 62:1 62:0 56:0
 
 		# Update chromium-web-store
-		website="https://api.github.com/repos/NeverDecaf/chromium-web-store/releases"
-		version=$(curl -Ls "$website" | jq -r ".[0].tag_name" | tr -d "v")
-		address="https://github.com/NeverDecaf/chromium-web-store/releases/download/v$version/Chromium.Web.Store.crx"
+		local website="https://api.github.com/repos/NeverDecaf/chromium-web-store/releases"
+		local version=$(curl -Ls "$website" | jq -r ".[0].tag_name" | tr -d "v")
+		local address="https://github.com/NeverDecaf/chromium-web-store/releases/download/v$version/Chromium.Web.Store.crx"
 		update_chromium_extension "$address"
 
 		# Update extensions
@@ -341,26 +341,26 @@ update_chromium() {
 update_chromium_extension() {
 
 	# Handle parameters
-	payload=${1}
+	local payload=${1}
 
 	# Update dependencies
 	update_ydotool || return 1
 	sudo apt install -y curl
 
 	# Update extension
-	starter="/var/lib/flatpak/exports/bin/com.github.Eloston.UngoogledChromium"
-	present=$([[ -f "$starter" ]] && echo true || echo false)
+	local starter="/var/lib/flatpak/exports/bin/com.github.Eloston.UngoogledChromium"
+	local present=$([[ -f "$starter" ]] && echo true || echo false)
 	if [[ $present == true ]]; then
 		flatpak kill com.github.Eloston.UngoogledChromium
 		sudo flatpak override com.github.Eloston.UngoogledChromium --filesystem=/tmp
 		if [ "${payload:0:4}" == "http" ]; then
-			address="$payload"
-			package="$(mktemp -d)/$(basename "$address")"
+			local address="$payload"
+			local package="$(mktemp -d)/$(basename "$address")"
 		else
-			version="$(flatpak run com.github.Eloston.UngoogledChromium --product-version)"
-			address="https://clients2.google.com/service/update2/crx?response=redirect&acceptformat=crx2,crx3"
-			address="${address}&prodversion=${version}&x=id%3D${payload}%26installsource%3Dondemand%26uc"
-			package="$(mktemp -d)/$payload.crx"
+			local version="$(flatpak run com.github.Eloston.UngoogledChromium --product-version)"
+			local address="https://clients2.google.com/service/update2/crx?response=redirect&acceptformat=crx2,crx3"
+			local address="${address}&prodversion=${version}&x=id%3D${payload}%26installsource%3Dondemand%26uc"
+			local package="$(mktemp -d)/$payload.crx"
 		fi
 		curl -L "$address" -o "$package" || return 1
 		sleep 1 && (sudo ydotoold &) &>/dev/null
@@ -410,7 +410,7 @@ update_figma() {
 	sudo chmod a+x /opt/figma-linux/figma-linux
 
 	# Change desktop
-	desktop="/usr/share/applications/figma-linux.desktop"
+	local desktop="/usr/share/applications/figma-linux.desktop"
 	sudo sed -i "s/Name=.*/Name=Figma/" "$desktop"
 
 }
@@ -421,11 +421,11 @@ update_flutter() {
 	sudo apt install -y build-essential clang cmake curl git libgtk-3-dev ninja-build pkg-config
 
 	# Update package
-	deposit="$HOME/Android/Flutter" && mkdir -p "$deposit"
+	local deposit="$HOME/Android/Flutter" && mkdir -p "$deposit"
 	git clone "https://github.com/flutter/flutter.git" -b stable "$deposit"
 
 	# Adjust environment
-	configs="$HOME/.bashrc"
+	local configs="$HOME/.bashrc"
 	if ! grep -q "Flutter" "$configs" 2>/dev/null; then
 		[[ -s "$configs" ]] || touch "$configs"
 		[[ -z $(tail -1 "$configs") ]] || echo "" >>"$configs"
@@ -445,7 +445,7 @@ update_flutter() {
 	code --install-extension "RichardCoutts.mvvm-plus" --force &>/dev/null
 
 	# Update android-studio
-	product=$(find /opt/android-* -maxdepth 0 2>/dev/null | sort -r | head -1)
+	local product=$(find /opt/android-* -maxdepth 0 2>/dev/null | sort -r | head -1)
 	update_jetbrains_plugin "$product" "6351"  # dart
 	update_jetbrains_plugin "$product" "9212"  # flutter
 	update_jetbrains_plugin "$product" "13666" # flutter-intl
@@ -469,9 +469,9 @@ update_gh() {
 update_git() {
 
 	# Handle parameters
-	default=${1:-main}
-	gituser=${2}
-	gitmail=${3}
+	local default=${1:-main}
+	local gituser=${2}
+	local gitmail=${3}
 
 	# Update package
 	sudo add-apt-repository -y ppa:git-core/ppa
@@ -496,14 +496,14 @@ update_inkscape() {
 update_jdownloader() {
 
 	# Handle parameters
-	deposit=${1:-$HOME/Downloads/JD2}
+	local deposit=${1:-$HOME/Downloads/JD2}
 
 	# Update dependencies
 	sudo apt install -y flatpak jq moreutils
 
 	# Update package
-	starter="/var/lib/flatpak/exports/bin/org.jdownloader.JDownloader"
-	present=$([[ -f "$starter" ]] && echo true || echo false)
+	local starter="/var/lib/flatpak/exports/bin/org.jdownloader.JDownloader"
+	local present=$([[ -f "$starter" ]] && echo true || echo false)
 	sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 	sudo flatpak remote-modify --enable flathub
 	flatpak install -y flathub org.jdownloader.JDownloader
@@ -513,16 +513,16 @@ update_jdownloader() {
 	mkdir -p "$deposit"
 
 	# Change desktop
-	desktop="/var/lib/flatpak/exports/share/applications/org.jdownloader.JDownloader.desktop"
+	local desktop="/var/lib/flatpak/exports/share/applications/org.jdownloader.JDownloader.desktop"
 	sudo sed -i "s/Icon=.*/Icon=jdownloader/" "$desktop"
 
 	# Change settings
 	if [[ $present = false ]]; then
-		appdata="$HOME/.var/app/org.jdownloader.JDownloader/data/jdownloader/cfg"
-		config1="$appdata/org.jdownloader.settings.GraphicalUserInterfaceSettings.json"
-		config2="$appdata/org.jdownloader.settings.GeneralSettings.json"
-		config3="$appdata/org.jdownloader.gui.jdtrayicon.TrayExtension.json"
-		config4="$appdata/org.jdownloader.extensions.extraction.ExtractionExtension.json"
+		local appdata="$HOME/.var/app/org.jdownloader.JDownloader/data/jdownloader/cfg"
+		local config1="$appdata/org.jdownloader.settings.GraphicalUserInterfaceSettings.json"
+		local config2="$appdata/org.jdownloader.settings.GeneralSettings.json"
+		local config3="$appdata/org.jdownloader.gui.jdtrayicon.TrayExtension.json"
+		local config4="$appdata/org.jdownloader.extensions.extraction.ExtractionExtension.json"
 		(flatpak run org.jdownloader.JDownloader >/dev/null 2>&1 &) && sleep 8
 		while [[ ! -f "$config1" ]]; do sleep 2; done
 		flatpak kill org.jdownloader.JDownloader && sleep 8
@@ -548,27 +548,27 @@ update_jdownloader() {
 update_jetbrains_plugin() {
 
 	# Handle parameters
-	deposit=${1:-/opt/android-studio}
-	element=${2}
+	local deposit=${1:-/opt/android-studio}
+	local element=${2}
 
 	# Update dependencies
 	[[ -d "$deposit" && -n "$element" ]] || return 0
 	sudo apt install -y curl jq
 
 	# Update plugin
-	release=$(cat "$deposit/product-info.json" | jq -r ".buildNumber" | grep -oP "(\d.+)")
-	datadir=$(cat "$deposit/product-info.json" | jq -r ".dataDirectoryName")
-	adjunct=$([[ $datadir == "AndroidStudio"* ]] && echo "Google/$datadir" || echo "JetBrains/$datadir")
-	plugins="$HOME/.local/share/$adjunct" && mkdir -p "$plugins"
+	local release=$(cat "$deposit/product-info.json" | jq -r ".buildNumber" | grep -oP "(\d.+)")
+	local datadir=$(cat "$deposit/product-info.json" | jq -r ".dataDirectoryName")
+	local adjunct=$([[ $datadir == "AndroidStudio"* ]] && echo "Google/$datadir" || echo "JetBrains/$datadir")
+	local plugins="$HOME/.local/share/$adjunct" && mkdir -p "$plugins"
 	for i in {1..3}; do
 		for j in {0..19}; do
-			address="https://plugins.jetbrains.com/api/plugins/$element/updates?page=$i"
-			maximum=$(curl -s "$address" | jq ".[$j].until" | tr -d '"' | sed "s/\.\*/\.9999/")
-			minimum=$(curl -s "$address" | jq ".[$j].since" | tr -d '"' | sed "s/\.\*/\.9999/")
+			local address="https://plugins.jetbrains.com/api/plugins/$element/updates?page=$i"
+			local maximum=$(curl -s "$address" | jq ".[$j].until" | tr -d '"' | sed "s/\.\*/\.9999/")
+			local minimum=$(curl -s "$address" | jq ".[$j].since" | tr -d '"' | sed "s/\.\*/\.9999/")
 			if dpkg --compare-versions "${minimum:-0000}" "le" "$release" && dpkg --compare-versions "$release" "le" "${maximum:-9999}"; then
-				address=$(curl -s "$address" | jq ".[$j].file" | tr -d '"')
-				address="https://plugins.jetbrains.com/files/$address"
-				archive="$(mktemp -d)/$(basename "$address")"
+				local address=$(curl -s "$address" | jq ".[$j].file" | tr -d '"')
+				local address="https://plugins.jetbrains.com/files/$address"
+				local archive="$(mktemp -d)/$(basename "$address")"
 				curl -LA "mozilla/5.0" "$address" -o "$archive"
 				unzip -o "$archive" -d "$plugins"
 				break 2
@@ -585,14 +585,14 @@ update_joal() {
 	sudo apt -y install curl jq libfuse2
 
 	# Update package
-	address="https://api.github.com/repos/anthonyraymond/joal-desktop/releases/latest"
-	version=$(curl -LA "mozilla/5.0" "$address" | jq -r ".tag_name" | tr -d "v")
-	current=$(find $HOME/Applications/JoalDesktop-*.AppImage | grep -oP "[\d.]+(?=.App)" | head -1)
-	updated=$(dpkg --compare-versions "$current" "ge" "$version" && echo true || echo false)
+	local address="https://api.github.com/repos/anthonyraymond/joal-desktop/releases/latest"
+	local version=$(curl -LA "mozilla/5.0" "$address" | jq -r ".tag_name" | tr -d "v")
+	local current=$(find $HOME/Applications/JoalDesktop-*.AppImage | grep -oP "[\d.]+(?=.App)" | head -1)
+	local updated=$(dpkg --compare-versions "$current" "ge" "$version" && echo true || echo false)
 	if [[ $updated = false ]]; then
-		address="https://github.com/anthonyraymond/joal-desktop/releases"
-		address="$address/download/v$version/JoalDesktop-$version-linux-x86_64.AppImage"
-		package="$HOME/Applications/JoalDesktop-$version.AppImage"
+		local address="https://github.com/anthonyraymond/joal-desktop/releases"
+		local address="$address/download/v$version/JoalDesktop-$version-linux-x86_64.AppImage"
+		local package="$HOME/Applications/JoalDesktop-$version.AppImage"
 		mkdir -p "$HOME/Applications"
 		! grep -q "Applications" "$HOME/.hidden" 2>/dev/null && echo "Applications" >>"$HOME/.hidden"
 		rm -f "$HOME/Applications/JoalDesktop-*.AppImage"
@@ -600,7 +600,7 @@ update_joal() {
 	fi
 
 	# Change desktop
-	desktop="/usr/share/applications/joal-desktop.desktop"
+	local desktop="/usr/share/applications/joal-desktop.desktop"
 	cat /dev/null | sudo tee "$desktop"
 	echo "[Desktop Entry]" | sudo tee -a "$desktop"
 	echo "Name=Joal" | sudo tee -a "$desktop"
@@ -633,19 +633,19 @@ update_lunacy() {
 	sudo apt install apt-show-versions curl jq
 
 	# Update package
-	current=$(apt-show-versions lunacy | grep -oP "[\d.]+" | tail -1)
-	address="https://raw.githubusercontent.com/scoopinstaller/extras/master/bucket/lunacy.json"
-	version=$(curl -LA "mozilla/5.0" "$address" | jq -r ".version")
-	updated=$(dpkg --compare-versions "$current" "ge" "$version" && echo true || echo false)
+	local current=$(apt-show-versions lunacy | grep -oP "[\d.]+" | tail -1)
+	local address="https://raw.githubusercontent.com/scoopinstaller/extras/master/bucket/lunacy.json"
+	local version=$(curl -LA "mozilla/5.0" "$address" | jq -r ".version")
+	local updated=$(dpkg --compare-versions "$current" "ge" "$version" && echo true || echo false)
 	if [[ $updated == false ]]; then
-		address="https://lcdn.icons8.com/setup/Lunacy.deb"
-		package="$(mktemp -d)/$(basename "$address")"
+		local address="https://lcdn.icons8.com/setup/Lunacy.deb"
+		local package="$(mktemp -d)/$(basename "$address")"
 		curl -LA "mozilla/5.0" "$address" -o "$package"
 		sudo apt install -y "$package"
 	fi
 
 	# Change desktop
-	desktop="/usr/share/applications/lunacy.desktop"
+	local desktop="/usr/share/applications/lunacy.desktop"
 	sudo sed -i "s/Icon=.*/Icon=lunacy/" "$desktop"
 
 }
@@ -653,16 +653,16 @@ update_lunacy() {
 update_mambaforge() {
 
 	# Handle parameters
-	deposit=${1:-$HOME/.mambaforge}
+	local deposit=${1:-$HOME/.mambaforge}
 
 	# Update dependencies
 	sudo apt install -y curl
 
 	# Update package
-	present=$([[ -x "$(which mamba)" ]] && echo true || echo false)
+	local present=$([[ -x "$(which mamba)" ]] && echo true || echo false)
 	if [[ $present = false ]]; then
-		address="https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
-		fetched="$(mktemp -d)/$(basename "$address")"
+		local address="https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
+		local fetched="$(mktemp -d)/$(basename "$address")"
 		curl -L "$address" -o "$fetched" && sh "$fetched" -b -p "$deposit"
 	fi
 
@@ -692,11 +692,11 @@ update_mpv() {
 	sudo apt update && sudo apt -y install libmpv2 mpv
 
 	# Change desktop
-	desktop="/usr/share/applications/mpv.desktop"
+	local desktop="/usr/share/applications/mpv.desktop"
 	sudo sed -i "s/Name=.*/Name=Mpv/" "$desktop"
 
 	# Create mpv.conf
-	config1="$HOME/.config/mpv/mpv.conf"
+	local config1="$HOME/.config/mpv/mpv.conf"
 	mkdir -p "$(dirname "$config1")" && cat /dev/null >"$config1"
 	echo "profile=gpu-hq" >>"$config1"
 	echo "vo=gpu-next" >>"$config1"
@@ -711,7 +711,7 @@ update_mpv() {
 	echo "profile=protocol.http" >>"$config1"
 
 	# Create input.conf
-	config2="$HOME/.config/mpv/input.conf"
+	local config2="$HOME/.config/mpv/input.conf"
 	mkdir -p "$(dirname "$config2")" && cat /dev/null >"$config2"
 
 }
@@ -719,7 +719,7 @@ update_mpv() {
 update_nodejs() {
 
 	# Handle parameters
-	version=${1:-16}
+	local version=${1:-16}
 
 	# Update dependencies
 	sudo apt install -y curl gcc g++ make
@@ -729,7 +729,7 @@ update_nodejs() {
 	sudo apt update && sudo apt install -y nodejs
 
 	# Change environment
-	configs="$HOME/.bashrc" && deposit="$HOME/.npm-global"
+	local configs="$HOME/.bashrc" && deposit="$HOME/.npm-global"
 	mkdir -p "$deposit" && npm config set prefix "$deposit"
 	if ! grep -q ".npm-global" "$configs" 2>/dev/null; then
 		[[ -s "$configs" ]] || touch "$configs"
@@ -755,8 +755,8 @@ update_nvidia() {
 	sudo update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
 
 	# Update package
-	address="https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.0-1_all.deb"
-	package="$(mktemp -d)/$(basename "$address")"
+	local address="https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.0-1_all.deb"
+	local package="$(mktemp -d)/$(basename "$address")"
 	curl -LA "mozilla/5.0" "$address" -o "$package" && sudo dpkg -i "$package"
 	sudo apt update && sudo apt install -y cuda
 
@@ -765,7 +765,7 @@ update_nvidia() {
 update_odoo() {
 
 	# Update dependencies
-	(update_nodejs && update_postgresql && update_python && update_pycharm) || return 1
+	(update_nodejs && update_postgresql && update_pycharm) || return 1
 
 	# Update nodejs
 	npm install -g rtlcss
@@ -773,7 +773,7 @@ update_odoo() {
 	# Update wkhtmltopdf
 
 	# Update pycharm
-	product=$(find /opt/pycharm -maxdepth 0 2>/dev/null | sort -r | head -1)
+	local product=$(find /opt/pycharm -maxdepth 0 2>/dev/null | sort -r | head -1)
 	update_jetbrains_plugin "$product" "10037" # csv-editor
 	update_jetbrains_plugin "$product" "12478" # xpathview-xslt
 	update_jetbrains_plugin "$product" "13499" # odoo
@@ -809,30 +809,30 @@ update_postgresql() {
 update_pycharm() {
 
 	# Handle parameters
-	deposit=${1:-$HOME/Projects}
+	local deposit=${1:-$HOME/Projects}
 
 	# Update dependencies
 	sudo apt install -y curl jq
 
 	# Update package
-	current=$(cat "/opt/pycharm/product-info.json" | jq -r ".dataDirectoryName" | grep -oP "(\d.+)" || echo "0.0.0.0")
-	address="https://data.services.jetbrains.com/products/releases?code=PCP&latest=true&type=release"
-	version=$(curl -Ls "$address" | jq -r ".PCP[0].version")
-	present=$([[ -f "/opt/pycharm/bin/pycharm.sh" ]] && echo true || echo false)
-	updated=$(dpkg --compare-versions "$current" "ge" "${version:0:6}" && echo true || echo false)
+	local current=$(cat "/opt/pycharm/product-info.json" | jq -r ".dataDirectoryName" | grep -oP "(\d.+)" || echo "0.0.0.0")
+	local address="https://data.services.jetbrains.com/products/releases?code=PCP&latest=true&type=release"
+	local version=$(curl -Ls "$address" | jq -r ".PCP[0].version")
+	local present=$([[ -f "/opt/pycharm/bin/pycharm.sh" ]] && echo true || echo false)
+	local updated=$(dpkg --compare-versions "$current" "ge" "${version:0:6}" && echo true || echo false)
 	if [[ $updated == false ]]; then
-		address="https://download.jetbrains.com/python/pycharm-professional-$version.tar.gz"
-		package="$(mktemp -d)/$(basename "$address")"
+		local address="https://download.jetbrains.com/python/pycharm-professional-$version.tar.gz"
+		local package="$(mktemp -d)/$(basename "$address")"
 		curl -LA "mozilla/5.0" "$address" -o "$package"
 		sudo rm -r "/opt/pycharm"
-		tempdir="$(mktemp -d)" && sudo tar -xvf "$package" -C "$tempdir"
+		local tempdir="$(mktemp -d)" && sudo tar -xvf "$package" -C "$tempdir"
 		sudo mv -f $tempdir/pycharm-* "/opt/pycharm"
 		sudo ln -sf "/opt/pycharm/bin/pycharm.sh" "/bin/pycharm"
 		source "$HOME/.bashrc"
 	fi
 
 	# Change desktop
-	desktop="/usr/share/applications/jetbrains-pycharm.desktop"
+	local desktop="/usr/share/applications/jetbrains-pycharm.desktop"
 	cat /dev/null | sudo tee "$desktop"
 	echo "[Desktop Entry]" | sudo tee -a "$desktop"
 	echo "Version=1.0" | sudo tee -a "$desktop"
@@ -863,7 +863,7 @@ update_python() {
 	sudo apt install -y python3 python3-dev python3-venv
 
 	# Change environment
-	configs="$HOME/.bashrc"
+	local configs="$HOME/.bashrc"
 	if ! grep -q "PYTHONDONTWRITEBYTECODE" "$configs" 2>/dev/null; then
 		[[ -s "$configs" ]] || touch "$configs"
 		[[ -z $(tail -1 "$configs") ]] || echo "" >>"$configs"
@@ -897,8 +897,8 @@ update_scrcpy() {
 update_system() {
 
 	# Handle parameters
-	country=${1:-Europe/Brussels}
-	machine=${2:-ubuhogen}
+	local country=${1:-Europe/Brussels}
+	local machine=${2:-ubuhogen}
 
 	# Change hostname
 	hostnamectl hostname "$machine"
@@ -908,7 +908,7 @@ update_system() {
 	sudo ln -s "/usr/share/zoneinfo/$country" "/etc/localtime"
 
 	# Change network
-	configs="/etc/NetworkManager/conf.d/default-wifi-powersave-on.conf"
+	local configs="/etc/NetworkManager/conf.d/default-wifi-powersave-on.conf"
 	sudo sed -i "s/wifi.powersave =.*/wifi.powersave = 2/" "$configs"
 	sudo systemctl disable NetworkManager-wait-online.service
 
@@ -929,8 +929,8 @@ update_system() {
 update_transmission() {
 
 	# Handle parameters
-	deposit=${1:-$HOME/Downloads/P2P}
-	seeding=${2:-0.1}
+	local deposit=${1:-$HOME/Downloads/P2P}
+	local seeding=${2:-0.1}
 
 	# Update dependencies
 	sudo apt install -y jq moreutils 
@@ -939,7 +939,7 @@ update_transmission() {
 	sudo apt install -y transmission
 
 	# Change settings
-	configs="$HOME/.config/transmission/settings.json"
+	local configs="$HOME/.config/transmission/settings.json"
 	mkdir -p "$(dirname "$configs")" "$deposit/Incomplete"
 	[[ -s "$configs" ]] || echo "{}" >"$configs"
 	jq '."incomplete-dir-enabled" = true' "$configs" | sponge "$configs"
@@ -957,10 +957,10 @@ update_vscode() {
 	sudo apt install -y curl fonts-cascadia-code jq moreutils
 
 	# Update package
-	present="$([[ -x $(command -v code) ]] && echo true || echo false)"
+	local present="$([[ -x $(command -v code) ]] && echo true || echo false)"
 	if [[ $present == false ]]; then
-		package="$(mktemp -d)/code_latest_amd64.deb"
-		address="https://update.code.visualstudio.com/latest/linux-deb-x64/stable"
+		local package="$(mktemp -d)/code_latest_amd64.deb"
+		local address="https://update.code.visualstudio.com/latest/linux-deb-x64/stable"
 		curl -LA "mozilla/5.0" "$address" -o "$package"
 		sudo apt install -y "$package"
 	fi
@@ -975,7 +975,7 @@ update_vscode() {
 	xdg-mime default "code.desktop" text/plain
 
 	# Change settings
-	configs="$HOME/.config/Code/User/settings.json"
+	local configs="$HOME/.config/Code/User/settings.json"
 	[[ -s "$configs" ]] || echo "{}" >"$configs"
 	jq '."editor.fontFamily" = "Cascadia Code, monospace"' "$configs" | sponge "$configs"
 	jq '."editor.fontSize" = 13' "$configs" | sponge "$configs"
@@ -1005,11 +1005,11 @@ update_ydotool() {
 	sudo apt autoremove -y --purge ydotool
 
 	# Update package
-	current=$(date -r "$(which ydotool)" +"%s")
-	maximum=$(date -d "10 days ago" +"%s")
-	updated=$([[ $current -lt $maximum ]] && echo false || echo true)
+	local current=$(date -r "$(which ydotool)" +"%s")
+	local maximum=$(date -d "10 days ago" +"%s")
+	local updated=$([[ $current -lt $maximum ]] && echo false || echo true)
 	[[ $updated == true ]] && return 0
-	current=$(dirname "$(readlink -f "$0")") && tempdir=$(mktemp -d)
+	local current=$(dirname "$(readlink -f "$0")") && tempdir=$(mktemp -d)
 	git clone "https://github.com/ReimuNotMoe/ydotool.git" "$tempdir"
 	cd "$tempdir" && mkdir build && cd build && cmake .. && make && sudo make install
 	cd "$current" && source "$HOME/.bashrc"
@@ -1025,12 +1025,12 @@ update_yt_dlp() {
 	sudo apt autoremove -y --purge yt-dlp
 
 	# Update package
-	current=$(date -r "$(which yt-dlp)" +"%s")
-	maximum=$(date -d "10 days ago" +"%s")
-	updated=$([[ $current -lt $maximum ]] && echo false || echo true)
+	local current=$(date -r "$(which yt-dlp)" +"%s")
+	local maximum=$(date -d "10 days ago" +"%s")
+	local updated=$([[ $current -lt $maximum ]] && echo false || echo true)
 	[[ $updated == true ]] && return 0
-	address="https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"
-	package="/usr/local/bin/yt-dlp" && sudo curl -LA "mozilla/5.0" "$address" -o "$package"
+	local address="https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"
+	local package="/usr/local/bin/yt-dlp" && sudo curl -LA "mozilla/5.0" "$address" -o "$package"
 	sudo chmod a+rx "$package"
 
 }

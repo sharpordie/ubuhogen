@@ -1063,7 +1063,7 @@ main() {
 	gsettings set org.gnome.desktop.session idle-delay 0
 
 	# Handle elements
-	factors=(
+	local members=(
 		"update_appearance"
 		"update_system"
 		"update_git main sharpordie 72373746+sharpordie@users.noreply.github.com"

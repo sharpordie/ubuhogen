@@ -1,5 +1,85 @@
 #!/usr/bin/env bash
 
+update_appearance() {
+
+	# Change terminal
+	local profile=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")
+	local deposit="org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$profile/"
+	gsettings set "$deposit" cell-height-scale 1.1000000000000001
+	gsettings set "$deposit" default-size-columns 96
+	gsettings set "$deposit" default-size-rows 24
+	gsettings set "$deposit" use-theme-colors false
+	gsettings set "$deposit" foreground-color "rgb(208,207,204)"
+	gsettings set "$deposit" background-color "rgb(23,20,33)"
+
+	# Enable night light
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-from 0
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-to 0
+	gsettings set org.gnome.settings-daemon.plugins.color night-light-temperature 4000
+	sudo -u gdm dbus-launch gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true
+	sudo -u gdm dbus-launch gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-from 0
+	sudo -u gdm dbus-launch gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-to 0
+	sudo -u gdm dbus-launch gsettings set org.gnome.settings-daemon.plugins.color night-light-temperature 4000
+
+	# Remove event sounds
+	gsettings set org.gnome.desktop.sound event-sounds false
+
+	# Remove home directory
+	gsettings set org.gnome.shell.extensions.ding show-home false
+
+	# Remove snap directory
+	! grep -q "snap" "$HOME/.hidden" 2>/dev/null && echo "snap" >>"$HOME/.hidden"
+
+	# Change dash-to-dock
+	gsettings set org.gnome.shell.extensions.dash-to-dock click-action minimize
+	gsettings set org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 32
+	gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed false
+	gsettings set org.gnome.shell.extensions.dash-to-dock show-trash false
+
+	# Change favorites
+	gsettings set org.gnome.shell favorite-apps "[ \
+		'org.gnome.Nautilus.desktop', \
+		'ungoogled-chromium.desktop', \
+		'org.gnome.Terminal.desktop', \
+		'jetbrains-pycharm.desktop', \
+		'code.desktop'
+	]"
+
+	# Change fonts
+	gsettings set org.gnome.desktop.interface font-name "Ubuntu 10"
+	gsettings set org.gnome.desktop.interface document-font-name "Sans 10"
+	gsettings set org.gnome.desktop.interface monospace-font-name "Ubuntu Mono 12"
+	gsettings set org.gnome.desktop.wm.preferences titlebar-font "Ubuntu Bold 10"
+	gsettings set org.gnome.desktop.wm.preferences titlebar-uses-system-font false
+
+	# Change icons
+	sudo add-apt-repository -y ppa:papirus/papirus-dev
+	sudo apt update && sudo apt install -y papirus-folders papirus-icon-theme
+	gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
+	sudo papirus-folders --color yaru --theme Papirus-Dark
+
+	# Change nautilus
+	gsettings set org.gnome.nautilus.preferences default-folder-viewer "list-view"
+	gsettings set org.gtk.Settings.FileChooser show-hidden false
+	gsettings set org.gtk.Settings.FileChooser sort-directories-first true
+
+	# Change theme
+	gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
+	gsettings set org.gnome.desktop.interface gtk-theme "Yaru-dark"
+
+	# Change wallpapers
+	sudo apt install -y curl
+	local address="https://raw.githubusercontent.com/sharpordie/andpaper/main/src/android-bottom-bright.png"
+	local picture="$HOME/Pictures/Backgrounds/$(basename "$address")"
+	mkdir -p "$(dirname $picture)" && curl -L "$address" -o "$picture"
+	gsettings set org.gnome.desktop.background picture-uri-dark "file://$picture"
+	gsettings set org.gnome.desktop.background picture-options "zoom"
+	gsettings set org.gnome.desktop.screensaver picture-uri "file://$picture"
+	gsettings set org.gnome.desktop.screensaver picture-options "zoom"
+
+}
+
 update_chromium() {
 
 	# Handle parameters
@@ -10,16 +90,16 @@ update_chromium() {
 	update_ydotool || return 1
 	sudo apt install -y curl jq
 
-    # Update package
-    local present=$([[ -x "$(command -v ungoogled-chromium)" ]] && echo true || echo false)
+	# Update package
+	local present=$([[ -x "$(command -v ungoogled-chromium)" ]] && echo true || echo false)
 	sudo add-apt-repository -y ppa:xtradeb/apps
 	sudo apt update && sudo apt install -y ungoogled-chromium
 
-    # Change desktop
+	# Change desktop
 	local desktop="/usr/share/applications/ungoogled-chromium.desktop"
 	sudo sed -i "s/Name=.*/Name=Chromium/" "$desktop"
 
-    # Change environment
+	# Change environment
 	local configs="$HOME/.bashrc"
 	if ! grep -q "CHROME_EXECUTABLE" "$configs" 2>/dev/null; then
 		[[ -s "$configs" ]] || touch "$configs"
@@ -28,7 +108,7 @@ update_chromium() {
 		export CHROME_EXECUTABLE="/usr/bin/ungoogled-chromium"
 	fi
 
-    # Finish installation
+	# Finish installation
 	if [[ "$present" == "false" ]]; then
 		# Launch chromium
 		sleep 1 && (sudo ydotoold &) &>/dev/null
@@ -172,6 +252,176 @@ update_chromium_extension() {
 
 }
 
+update_docker() {
+
+	# Update dependencies
+	sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+
+	# Update package
+	curl -fsSL "https://download.docker.com/linux/ubuntu/gpg" | sudo gpg --dearmor --yes -o "/usr/share/keyrings/docker-archive-keyring.gpg"
+	echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+	sudo apt update && sudo apt install -y docker-ce docker-compose-plugin
+	sudo usermod -aG docker "$USER"
+
+}
+
+update_git() {
+
+	# Handle parameters
+	local default=${1:-main}
+	local gituser=${2}
+	local gitmail=${3}
+
+	# Update package
+	sudo add-apt-repository -y ppa:git-core/ppa
+	sudo apt update && sudo apt install -y git
+
+	# Change settings
+	[[ -n "$gitmail" ]] && git config --global user.email "$gitmail"
+	[[ -n "$gituser" ]] && git config --global user.name "$gituser"
+	git config --global http.postBuffer 1048576000
+	git config --global init.defaultBranch "$default"
+
+}
+
+update_github_cli() {
+
+	# Update dependencies
+	sudo apt -y install curl
+
+	# Update package
+	curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+	sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+	echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
+	sudo apt update && sudo apt install -y gh
+
+}
+
+update_keepassxc() {
+
+	# Update package
+	sudo add-apt-repository -y ppa:phoerious/keepassxc
+	sudo apt update && sudo apt install -y keepassxc
+
+}
+
+update_mambaforge() {
+
+	# Handle parameters
+	local deposit=${1:-$HOME/.mambaforge}
+
+	# Update dependencies
+	sudo apt -y install curl
+
+	# Update package
+	local present=$([[ -x "$(which mamba)" ]] && echo "true" || echo "false")
+	if [[ "$present" == "false" ]]; then
+		local address="https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
+		local fetched="$(mktemp -d)/$(basename "$address")"
+		curl -L "$address" -o "$fetched" && sh "$fetched" -b -p "$deposit"
+	fi
+
+	# Change environment
+	"$deposit/condabin/conda" init
+
+	# Change settings
+	"$deposit/condabin/conda" config --set auto_activate_base false
+
+}
+
+update_nodejs() {
+
+	# Handle parameters
+	local version=${1:-20}
+
+	# Update dependencies
+	sudo apt install -y ca-certificates curl gcc g++ gnupg make
+
+	# Update package
+	sudo mkdir -p /etc/apt/keyrings
+	curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+	echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$version.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+	sudo apt update && sudo apt install -y nodejs
+
+	# Change environment
+	local configs="$HOME/.bashrc" && deposit="$HOME/.npm-global"
+	mkdir -p "$deposit" && npm config set prefix "$deposit"
+	if ! grep -q ".npm-global" "$configs" 2>/dev/null; then
+		[[ -s "$configs" ]] || touch "$configs"
+		[[ -z $(tail -1 "$configs") ]] || echo "" >>"$configs"
+		echo 'export PATH="$PATH:$HOME/.npm-global/bin"' >>"$configs"
+		export PATH="$PATH:$HOME/.npm-global/bin"
+	fi
+
+	# Change settings
+	npm set audit false
+
+}
+
+update_pgadmin() {
+
+	# INFO: Doesn't work with mantic yet
+
+	# Update dependencies
+	sudo apt install -y curl gnupg
+
+	# Update package
+	curl -fsS https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo gpg --dearmor -o /usr/share/keyrings/packages-pgadmin-org.gpg
+	sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/packages-pgadmin-org.gpg] https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/$(lsb_release -cs) pgadmin4 main" > /etc/apt/sources.list.d/pgadmin4.list && apt update'
+	sudo apt update && sudo apt install -y pgadmin4-desktop
+
+}
+
+update_postgresql() {
+
+	# Update package
+	sudo apt install -y postgresql postgresql-client
+
+	# Change settings
+	sudo su - postgres -c "createuser $USER"
+	createdb "$USER" || return 0
+
+}
+
+update_pycharm() {
+
+	# Update dependencies
+	sudo apt install -y curl jq
+
+	# Update package
+	local current=$(cat "/opt/pycharm/product-info.json" | jq -r ".dataDirectoryName" | grep -oP "(\d.+)" || echo "0.0.0.0")
+	local address="https://data.services.jetbrains.com/products/releases?code=PCP&latest=true&type=release"
+	local version=$(curl -Ls "$address" | jq -r ".PCP[0].version")
+	local present=$([[ -f "/opt/pycharm/bin/pycharm.sh" ]] && echo true || echo false)
+	local updated=$(dpkg --compare-versions "$current" "ge" "${version:0:6}" && echo true || echo false)
+	if [[ $updated == false ]]; then
+		local address="https://download.jetbrains.com/python/pycharm-professional-$version.tar.gz"
+		local package="$(mktemp -d)/$(basename "$address")"
+		curl -LA "mozilla/5.0" "$address" -o "$package"
+		sudo rm -r "/opt/pycharm"
+		local tempdir="$(mktemp -d)" && sudo tar -xvf "$package" -C "$tempdir"
+		sudo mv -f $tempdir/pycharm-* "/opt/pycharm"
+		sudo ln -sf "/opt/pycharm/bin/pycharm.sh" "/bin/pycharm"
+		source "$HOME/.bashrc"
+	fi
+
+	# Change desktop
+	local desktop="/usr/share/applications/jetbrains-pycharm.desktop"
+	cat /dev/null | sudo tee "$desktop"
+	echo "[Desktop Entry]" | sudo tee -a "$desktop"
+	echo "Version=1.0" | sudo tee -a "$desktop"
+	echo "Type=Application" | sudo tee -a "$desktop"
+	echo "Name=PyCharm" | sudo tee -a "$desktop"
+	echo "Icon=pycharm" | sudo tee -a "$desktop"
+	echo 'Exec="/opt/pycharm/bin/pycharm.sh" %f' | sudo tee -a "$desktop"
+	echo "Comment=Python IDE for Professional Developers" | sudo tee -a "$desktop"
+	echo "Categories=Development;IDE;" | sudo tee -a "$desktop"
+	echo "Terminal=false" | sudo tee -a "$desktop"
+	echo "StartupWMClass=jetbrains-pycharm" | sudo tee -a "$desktop"
+	echo "StartupNotify=true" | sudo tee -a "$desktop"
+
+}
+
 update_system() {
 
 	# Handle parameters
@@ -203,6 +453,50 @@ update_system() {
 
 }
 
+update_vscode() {
+
+	# Update dependencies
+	sudo apt install -y curl fonts-cascadia-code git jq moreutils
+
+	# Update package
+	local present=$([[ -x $(command -v code) ]] && echo "true" || echo "false")
+	if [[ "$present" == "false" ]]; then
+		local package="$(mktemp -d)/code_latest_amd64.deb"
+		local address="https://update.code.visualstudio.com/latest/linux-deb-x64/stable"
+		curl -LA "mozilla/5.0" "$address" -o "$package" && sudo apt install -y "$package"
+	fi
+
+	# Update extensions
+	code --install-extension bierner.markdown-preview-github-styles --force
+	code --install-extension foxundermoon.shell-format --force
+	code --install-extension github.github-vscode-theme --force
+
+	# Change default editor
+	git config --global core.editor "code --wait"
+	xdg-mime default "code.desktop" text/plain
+
+	# Change settings
+	local configs="$HOME/.config/Code/User/settings.json"
+	[[ -s "$configs" ]] || echo "{}" >"$configs"
+	jq '."editor.fontFamily" = "Cascadia Code, monospace"' "$configs" | sponge "$configs"
+	jq '."editor.fontSize" = 13' "$configs" | sponge "$configs"
+	jq '."editor.lineHeight" = 35' "$configs" | sponge "$configs"
+	jq '."security.workspace.trust.enabled" = false' "$configs" | sponge "$configs"
+	jq '."telemetry.telemetryLevel" = "crash"' "$configs" | sponge "$configs"
+	jq '."update.mode" = "none"' "$configs" | sponge "$configs"
+	jq '."window.menuBarVisibility" = "toggle"' "$configs" | sponge "$configs"
+	jq '."workbench.colorTheme" = "GitHub Dark Default"' "$configs" | sponge "$configs"
+
+	# Change max_user_watches
+	if ! grep -q "fs.inotify.max_user_watches" "/etc/sysctl.conf" 2>/dev/null; then
+		[[ -z $(tail -1 "/etc/sysctl.conf") ]] || echo "" | sudo tee -a "/etc/sysctl.conf"
+		echo "# Augment the amount of inotify watchers" | sudo tee -a "/etc/sysctl.conf"
+		echo "fs.inotify.max_user_watches=524288" | sudo tee -a "/etc/sysctl.conf"
+		sudo sysctl -p
+	fi
+
+}
+
 update_ydotool() {
 
 	# Update dependencies
@@ -220,6 +514,25 @@ update_ydotool() {
 	git clone "https://github.com/ReimuNotMoe/ydotool.git" "$tempdir"
 	cd "$tempdir" && mkdir build && cd build && cmake .. && make && sudo make install
 	cd "$current" && source "$HOME/.bashrc"
+
+}
+
+update_yt_dlp() {
+
+	# Update dependencies
+	sudo apt install -y curl
+
+	# Remove package
+	sudo apt autoremove -y --purge yt-dlp
+
+	# Update package
+	local current=$(date -r "$(which yt-dlp)" +"%s")
+	local maximum=$(date -d "10 days ago" +"%s")
+	local updated=$([[ $current -lt $maximum ]] && echo false || echo true)
+	[[ $updated == true ]] && return 0
+	local address="https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"
+	local package="/usr/local/bin/yt-dlp" && sudo curl -LA "mozilla/5.0" "$address" -o "$package"
+	sudo chmod a+rx "$package"
 
 }
 
@@ -242,33 +555,36 @@ main() {
 	EOD
 	clear && printf "\n\033[92m%s\033[00m\n\n" "$welcome"
 
-	# Remove timeouts
-	echo "Defaults timestamp_timeout=-1" | sudo tee "/etc/sudoers.d/disable_timeout" &>/dev/null
-
 	# Remove sleeping
 	gsettings set org.gnome.desktop.notifications show-banners false
 	gsettings set org.gnome.desktop.screensaver lock-enabled false
 	gsettings set org.gnome.desktop.session idle-delay 0
+
+	# Remove software updater
+	sudo apt remove -y update-notifier &>/dev/null
+
+	# Remove timeouts
+	echo "Defaults timestamp_timeout=-1" | sudo tee "/etc/sudoers.d/disable_timeout" &>/dev/null
 
 	# Handle members
 	local members=(
 		"update_appearance"
 		"update_system"
 		"update_chromium"
-		# "update_git 'main' 'sharpordie' '72373746+sharpordie@users.noreply.github.com'"
-		# "update_vscode"
+		"update_git 'main' 'sharpordie' '72373746+sharpordie@users.noreply.github.com'"
+		"update_vscode"
 
 		"update_docker"
-		# "update_github_cli"
-		# "update_keepassxc"
-		# "update_mambaforge"
+		"update_github_cli"
+		"update_keepassxc"
+		"update_mambaforge"
 		# "update_mpv"
 		"update_nodejs"
 		"update_obs"
-		"update_pgadmin"
+		# "update_pgadmin"
 		"update_postgresql"
 		"update_pycharm"
-		# "update_yt_dlp"
+		"update_yt_dlp"
 
 		"update_odoo"
 	)
@@ -294,6 +610,9 @@ main() {
 	gsettings set org.gnome.desktop.notifications show-banners true
 	gsettings set org.gnome.desktop.screensaver lock-enabled true
 	gsettings set org.gnome.desktop.session idle-delay 300
+
+	# Revert software updater
+	sudo apt install -y update-notifier &>/dev/null
 
 	# Revert timeouts
 	sudo rm "/etc/sudoers.d/disable_timeout"

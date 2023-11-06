@@ -11,7 +11,7 @@ update_chromium() {
 	sudo apt install -y curl jq
 
     # Update package
-    local present=$([[ -x "$(which ungoogled-chromium)" ]] && echo true || echo false)
+    local present=$([[ -x "$(command -v ungoogled-chromium)" ]] && echo true || echo false)
 	sudo add-apt-repository -y ppa:xtradeb/apps
 	sudo apt update && sudo apt install -y ungoogled-chromium
 
@@ -131,7 +131,7 @@ update_chromium_extension() {
 	sudo apt install -y curl libarchive-tools
 
 	# Update extension
-	if [[ -x $(command -v ungoogled-chromium) ]]; then
+	if [[ -x "$(command -v ungoogled-chromium)" ]]; then
 		if [[ "$payload" == http* ]]; then
 			local address="$payload"
 			local package="$(mktemp -d)/$(basename "$address")"

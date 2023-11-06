@@ -33,7 +33,6 @@ update_chromium() {
 		# Launch chromium
 		sleep 1 && (sudo ydotoold &) &>/dev/null
 		sleep 1 && (ungoogled-chromium --lang=en --start-maximized &) &>/dev/null
-		# sleep 4 && sudo ydotool key 125:1 103:1 103:0 125:0
 
 		# Change deposit
 		mkdir -p "$deposit"
@@ -58,7 +57,7 @@ update_chromium() {
 		sleep 1 && sudo ydotool type "custom-ntp" && sleep 1 && sudo ydotool key 28:1 28:0
 		sleep 1 && for i in $(seq 1 6); do sleep 0.5 && sudo ydotool key 15:1 15:0; done
 		sleep 1 && sudo ydotool key 29:1 30:1 30:0 29:0 && sleep 1 && sudo ydotool type "$startup"
-		sleep 1 && for i in $(seq 1 2); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
+		sleep 1 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0
 		sleep 1 && sudo ydotool key 108:1 108:0 && sleep 1 && sudo ydotool key 28:1 28:0
 
 		# Change disable-sharing-hub flag
@@ -129,10 +128,10 @@ update_chromium_extension() {
 
 	# Update dependencies
 	update_ydotool || return 1
-	sudo apt install -y curl
+	sudo apt install -y curl libarchive-tools
 
 	# Update extension
-	if [[ -x $(command -v chromium) ]]; then
+	if [[ -x $(command -v ungoogled-chromium) ]]; then
 		if [[ "$payload" == http* ]]; then
 			local address="$payload"
 			local package="$(mktemp -d)/$(basename "$address")"

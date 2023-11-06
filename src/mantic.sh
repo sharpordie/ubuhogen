@@ -33,7 +33,7 @@ update_chromium() {
 		# Launch chromium
 		sleep 1 && (sudo ydotoold &) &>/dev/null
 		sleep 1 && (ungoogled-chromium --lang=en --start-maximized &) &>/dev/null
-		sleep 4 && sudo ydotool key 125:1 103:1 103:0 125:0
+		# sleep 4 && sudo ydotool key 125:1 103:1 103:0 125:0
 
 		# Change deposit
 		mkdir -p "$deposit"

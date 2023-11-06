@@ -1,5 +1,17 @@
 #!/usr/bin/env bash
 
+update_antares() {
+
+	# Update dependencies
+	sudo apt install -y apt-transport-https ca-certificates curl gnupg software-properties-common
+
+	# Update package
+	curl https://antares-sql.github.io/antares-ppa/key.gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/antares.gpg
+	sudo curl -s --compressed -o /etc/apt/sources.list.d/antares.list https://antares-sql.github.io/antares-ppa/list_file.list
+	sudo apt update && sudo apt install -y antares
+
+}
+
 update_appearance() {
 
 	# Change terminal
@@ -255,7 +267,7 @@ update_chromium_extension() {
 update_docker() {
 
 	# Update dependencies
-	sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+	sudo apt install -y apt-transport-https ca-certificates curl gnupg software-properties-common
 
 	# Update package
 	curl -fsSL "https://download.docker.com/linux/ubuntu/gpg" | sudo gpg --dearmor --yes -o "/usr/share/keyrings/docker-archive-keyring.gpg"
@@ -574,6 +586,7 @@ main() {
 		"update_git 'main' 'sharpordie' '72373746+sharpordie@users.noreply.github.com'"
 		"update_vscode"
 
+		"update_antares"
 		"update_docker"
 		"update_github_cli"
 		"update_keepassxc"

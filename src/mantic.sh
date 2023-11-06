@@ -6,7 +6,7 @@ update_antares() {
 	sudo apt install -y apt-transport-https ca-certificates curl gnupg software-properties-common
 
 	# Update package
-	curl https://antares-sql.github.io/antares-ppa/key.gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/antares.gpg
+	curl https://antares-sql.github.io/antares-ppa/key.gpg | sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/antares.gpg
 	sudo curl -s --compressed -o /etc/apt/sources.list.d/antares.list https://antares-sql.github.io/antares-ppa/list_file.list
 	sudo apt update && sudo apt install -y antares
 
@@ -55,7 +55,9 @@ update_appearance() {
 		'ungoogled-chromium.desktop', \
 		'org.gnome.Terminal.desktop', \
 		'jetbrains-pycharm.desktop', \
-		'code.desktop'
+		'code.desktop', \
+		'com.obsproject.Studio.desktop', \
+		'io.mpv.Mpv.desktop' \
 	]"
 
 	# Change fonts
@@ -82,13 +84,39 @@ update_appearance() {
 
 	# Change wallpapers
 	sudo apt install -y curl
-	local address="https://raw.githubusercontent.com/sharpordie/andpaper/main/src/android-bottom-bright.png"
+	local address="https://raw.githubusercontent.com/sharpordie/odoowall/master/src/odoo-higher-darken.png"
 	local picture="$HOME/Pictures/Backgrounds/$(basename "$address")"
 	mkdir -p "$(dirname $picture)" && curl -L "$address" -o "$picture"
 	gsettings set org.gnome.desktop.background picture-uri-dark "file://$picture"
 	gsettings set org.gnome.desktop.background picture-options "zoom"
 	gsettings set org.gnome.desktop.screensaver picture-uri "file://$picture"
 	gsettings set org.gnome.desktop.screensaver picture-options "zoom"
+
+}
+
+update_bruno() {
+
+	# Update dependencies
+	sudo apt -y install curl jq
+
+	# Update package
+	local address="https://api.github.com/repos/usebruno/bruno/releases/latest"
+	local version=$(curl -LA "mozilla/5.0" "$address" | jq -r ".tag_name" | tr -d "v")
+	local address="https://github.com/usebruno/bruno/releases/download/v$version/bruno_${version}_amd64_linux.deb"
+	local package="$(mktemp -d)/$(basename "$address")"
+	curl -LA "mozilla/5.0" "$address" -o "$package" && sudo apt install -y "$package"
+
+	# local current=$(find $HOME/Applications/JoalDesktop-*.AppImage | grep -oP "[\d.]+(?=.App)" | head -1)
+	# local updated=$(dpkg --compare-versions "$current" "ge" "$version" && echo true || echo false)
+	# if [[ $updated = false ]]; then
+	# 	local address="https://github.com/usebruno/bruno/releases"
+	# 	local address="$address/download/v$version/JoalDesktop-$version-linux-x86_64.AppImage"
+	# 	local package="$HOME/Applications/JoalDesktop-$version.AppImage"
+	# 	mkdir -p "$HOME/Applications"
+	# 	! grep -q "Applications" "$HOME/.hidden" 2>/dev/null && echo "Applications" >>"$HOME/.hidden"
+	# 	rm -f "$HOME/Applications/JoalDesktop-*.AppImage"
+	# 	curl -LA "mozilla/5.0" "$address" -o "$package" && chmod +x "$package"
+	# fi
 
 }
 
@@ -132,7 +160,6 @@ update_chromium() {
 		sleep 1 && sudo ydotool type "chrome://settings/" && sleep 1 && sudo ydotool key 28:1 28:0
 		sleep 1 && sudo ydotool type "before downloading" && sleep 1 && sudo ydotool key 28:1 28:0
 		sleep 1 && for i in $(seq 1 3); do sleep 0.5 && sudo ydotool key 15:1 15:0; done && sleep 1 && sudo ydotool key 28:1 28:0
-		sleep 1 && sudo ydotool key 56:1 15:1 15:0 56:0 && sleep 1 && sudo ydotool key 56:1 15:1 15:0 56:0
 		sleep 1 && sudo ydotool key 29:1 38:1 38:0 29:0 && sleep 1 && sudo ydotool type "$deposit" && sleep 1 && sudo ydotool key 28:1 28:0
 		sleep 1 && sudo ydotool key 15:1 15:0 && sleep 1 && sudo ydotool key 28:1 28:0
 
@@ -277,6 +304,22 @@ update_docker() {
 
 }
 
+update_eid() {
+
+	# Update dependencies
+	sudo apt install -y curl
+
+	# Update package
+	local present=$([[ -x $(command -v eid-mw) ]] && echo "true" || echo "false")
+	if [[ "$present" == "false" ]]; then
+		local address="https://eid.belgium.be/sites/default/files/software/eid-archive_2023.3_all.deb"
+		local package="$(mktemp -d)/$(basename "$address")"
+		curl -LA "mozilla/5.0" "$address" -o "$package" && sudo apt install -y "$package"
+		sudo apt update && sudo apt install -y eid-mw eid-viewer
+	fi
+
+}
+
 update_git() {
 
 	# Handle parameters
@@ -306,6 +349,40 @@ update_github_cli() {
 	sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
 	echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
 	sudo apt update && sudo apt install -y gh
+
+}
+
+update_jetbrains_plugin() {
+
+	# Handle parameters
+	local deposit=${1:-/opt/android-studio}
+	local element=${2}
+
+	# Update dependencies
+	[[ -d "$deposit" && -n "$element" ]] || return 0
+	sudo apt install -y curl jq
+
+	# Update plugin
+	local release=$(cat "$deposit/product-info.json" | jq -r ".buildNumber" | grep -oP "(\d.+)")
+	local datadir=$(cat "$deposit/product-info.json" | jq -r ".dataDirectoryName")
+	local adjunct=$([[ $datadir == "AndroidStudio"* ]] && echo "Google/$datadir" || echo "JetBrains/$datadir")
+	local plugins="$HOME/.local/share/$adjunct" && mkdir -p "$plugins"
+	for i in {1..3}; do
+		for j in {0..19}; do
+			local address="https://plugins.jetbrains.com/api/plugins/$element/updates?page=$i"
+			local maximum=$(curl -s "$address" | jq ".[$j].until" | tr -d '"' | sed "s/\.\*/\.9999/")
+			local minimum=$(curl -s "$address" | jq ".[$j].since" | tr -d '"' | sed "s/\.\*/\.9999/")
+			if dpkg --compare-versions "${minimum:-0000}" "le" "$release" && dpkg --compare-versions "$release" "le" "${maximum:-9999}"; then
+				local address=$(curl -s "$address" | jq ".[$j].file" | tr -d '"')
+				local address="https://plugins.jetbrains.com/files/$address"
+				local archive="$(mktemp -d)/$(basename "$address")"
+				curl -LA "mozilla/5.0" "$address" -o "$archive"
+				unzip -o "$archive" -d "$plugins"
+				break 2
+			fi
+			sleep 1
+		done
+	done
 
 }
 
@@ -341,6 +418,42 @@ update_mambaforge() {
 
 }
 
+update_mpv() {
+
+	# Update dependencies
+	sudo apt install -y flatpak
+
+	# Update package
+	sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+	sudo flatpak remote-modify --enable flathub
+	flatpak install -y flathub io.mpv.Mpv
+	sudo update-desktop-database
+
+	# Change desktop
+	local desktop="/var/lib/flatpak/exports/share/applications/io.mpv.Mpv.desktop"
+	sudo sed -i "s/Name=.*/Name=Mpv/" "$desktop"
+
+	# Create mpv.conf
+	local config1="$HOME/.var/app/io.mpv.Mpv/config/mpv/mpv.conf"
+	mkdir -p "$(dirname "$config1")" && cat /dev/null >"$config1"
+	echo "profile=gpu-hq" >>"$config1"
+	echo "vo=gpu-next" >>"$config1"
+	echo "keep-open=yes" >>"$config1"
+	echo "save-position-on-quit=yes" >>"$config1"
+	echo 'ytdl-format="bestvideo[height<=?2160]+bestaudio/best"' >>"$config1"
+	echo "[protocol.http]" >>"$config1"
+	echo "force-window=immediate" >>"$config1"
+	echo "[protocol.https]" >>"$config1"
+	echo "profile=protocol.http" >>"$config1"
+	echo "[protocol.ytdl]" >>"$config1"
+	echo "profile=protocol.http" >>"$config1"
+
+	# Create input.conf
+	local config2="$HOME/.var/app/io.mpv.Mpv/config/mpv/input.conf"
+	mkdir -p "$(dirname "$config2")" && cat /dev/null >"$config2"
+
+}
+
 update_nodejs() {
 
 	# Handle parameters
@@ -351,7 +464,7 @@ update_nodejs() {
 
 	# Update package
 	sudo mkdir -p /etc/apt/keyrings
-	curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+	curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor --yes -o /etc/apt/keyrings/nodesource.gpg
 	echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$version.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
 	sudo apt update && sudo apt install -y nodejs
 
@@ -370,15 +483,59 @@ update_nodejs() {
 
 }
 
+update_nvidia_cuda() {
+
+	# Update dependencies
+	[[ $(lspci | grep -e VGA) == *"NVIDIA"* ]] || return 1
+	sudo apt install -y linux-headers-$(uname -r)
+
+	# Update package
+	sudo apt install -y nvidia-cuda-toolkit
+
+}
+
+update_odoo() {
+
+	# Update dependencies
+	(update_nodejs "$@" && update_postgresql && update_pycharm) || return 1
+
+	# Update nodejs
+	npm install -g rtlcss
+
+	# Update pycharm
+	local product=$(find /opt/pycharm -maxdepth 0 2>/dev/null | sort -r | head -1)
+	update_jetbrains_plugin "$product" "10037" # csv-editor
+	update_jetbrains_plugin "$product" "12478" # xpathview-xslt
+	update_jetbrains_plugin "$product" "13499" # odoo
+
+	# Update vscode
+	code --install-extension "trinhanhngoc.vscode-odoo" --force &>/dev/null
+
+}
+
+update_obs() {
+
+	# Update dependencies
+	sudo apt install -y flatpak
+
+	# Update package
+	sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+	sudo flatpak remote-modify --enable flathub
+	flatpak install -y flathub com.obsproject.Studio
+	sudo update-desktop-database
+
+}
+
 update_pgadmin() {
 
 	# INFO: Doesn't work with mantic yet
+	return 0
 
 	# Update dependencies
 	sudo apt install -y curl gnupg
 
 	# Update package
-	curl -fsS https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo gpg --dearmor -o /usr/share/keyrings/packages-pgadmin-org.gpg
+	curl -fsS https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo gpg --dearmor --yes -o /usr/share/keyrings/packages-pgadmin-org.gpg
 	sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/packages-pgadmin-org.gpg] https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/$(lsb_release -cs) pgadmin4 main" > /etc/apt/sources.list.d/pgadmin4.list && apt update'
 	sudo apt update && sudo apt install -y pgadmin4-desktop
 
@@ -587,12 +744,14 @@ main() {
 		"update_vscode"
 
 		"update_antares"
+		"update_bruno"
 		"update_docker"
 		"update_github_cli"
 		"update_keepassxc"
 		"update_mambaforge"
-		# "update_mpv"
+		"update_mpv"
 		"update_nodejs"
+		"update_nvidia_cuda"
 		"update_obs"
 		# "update_pgadmin"
 		"update_postgresql"

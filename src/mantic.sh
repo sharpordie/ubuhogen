@@ -3,7 +3,7 @@
 update_antares() {
 
 	# Update dependencies
-	sudo apt install -y apt-transport-https ca-certificates curl gnupg software-properties-common
+	sudo apt install -y curl gnupg
 
 	# Update package
 	curl https://antares-sql.github.io/antares-ppa/key.gpg | sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/antares.gpg
@@ -105,18 +105,6 @@ update_bruno() {
 	local address="https://github.com/usebruno/bruno/releases/download/v$version/bruno_${version}_amd64_linux.deb"
 	local package="$(mktemp -d)/$(basename "$address")"
 	curl -LA "mozilla/5.0" "$address" -o "$package" && sudo apt install -y "$package"
-
-	# local current=$(find $HOME/Applications/JoalDesktop-*.AppImage | grep -oP "[\d.]+(?=.App)" | head -1)
-	# local updated=$(dpkg --compare-versions "$current" "ge" "$version" && echo true || echo false)
-	# if [[ $updated = false ]]; then
-	# 	local address="https://github.com/usebruno/bruno/releases"
-	# 	local address="$address/download/v$version/JoalDesktop-$version-linux-x86_64.AppImage"
-	# 	local package="$HOME/Applications/JoalDesktop-$version.AppImage"
-	# 	mkdir -p "$HOME/Applications"
-	# 	! grep -q "Applications" "$HOME/.hidden" 2>/dev/null && echo "Applications" >>"$HOME/.hidden"
-	# 	rm -f "$HOME/Applications/JoalDesktop-*.AppImage"
-	# 	curl -LA "mozilla/5.0" "$address" -o "$package" && chmod +x "$package"
-	# fi
 
 }
 
@@ -294,7 +282,7 @@ update_chromium_extension() {
 update_docker() {
 
 	# Update dependencies
-	sudo apt install -y apt-transport-https ca-certificates curl gnupg software-properties-common
+	sudo apt install -y curl gnupg
 
 	# Update package
 	curl -fsSL "https://download.docker.com/linux/ubuntu/gpg" | sudo gpg --dearmor --yes -o "/usr/share/keyrings/docker-archive-keyring.gpg"
@@ -528,9 +516,6 @@ update_obs() {
 
 update_pgadmin() {
 
-	# INFO: Doesn't work with mantic yet
-	return 0
-
 	# Update dependencies
 	sudo apt install -y curl gnupg
 
@@ -546,7 +531,7 @@ update_postgresql() {
 	# Update package
 	sudo apt install -y postgresql postgresql-client
 
-	# Change settings
+	# Create user
 	sudo su - postgres -c "createuser $USER"
 	createdb "$USER" || return 0
 
@@ -729,7 +714,7 @@ main() {
 	gsettings set org.gnome.desktop.screensaver lock-enabled false
 	gsettings set org.gnome.desktop.session idle-delay 0
 
-	# Remove software updater
+	# Remove software notifier
 	sudo apt remove -y update-notifier &>/dev/null
 
 	# Remove timeouts
@@ -742,7 +727,6 @@ main() {
 		"update_chromium"
 		"update_git 'main' 'sharpordie' '72373746+sharpordie@users.noreply.github.com'"
 		"update_vscode"
-
 		"update_antares"
 		"update_bruno"
 		"update_docker"
@@ -753,11 +737,10 @@ main() {
 		"update_nodejs"
 		"update_nvidia_cuda"
 		"update_obs"
-		# "update_pgadmin"
+		"update_pgadmin"
 		"update_postgresql"
 		"update_pycharm"
 		"update_yt_dlp"
-
 		"update_odoo"
 	)
 
@@ -783,7 +766,7 @@ main() {
 	gsettings set org.gnome.desktop.screensaver lock-enabled true
 	gsettings set org.gnome.desktop.session idle-delay 300
 
-	# Revert software updater
+	# Revert software notifier
 	sudo apt install -y update-notifier &>/dev/null
 
 	# Revert timeouts

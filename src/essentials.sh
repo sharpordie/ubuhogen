@@ -676,9 +676,12 @@ update_mambaforge() {
 
 update_mkvtoolnix() {
 
+	# Update dependencies
+	sudo apt -y install gnupg wget
+
 	# Update package
-	sudo sh -c 'echo "deb https://mkvtoolnix.download/ubuntu/ $(lsb_release -sc) main" >> /etc/apt/sources.list.d/bunkus.org.list'
-	wget -q -O - https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt | sudo apt-key add -
+	sudo wget -O /usr/share/keyrings/gpg-pub-moritzbunkus.gpg https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg
+	sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/gpg-pub-moritzbunkus.gpg] https://mkvtoolnix.download/ubuntu/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/mkvtoolnix.download.list'
 	sudo apt update && sudo apt install -y mkvtoolnix mkvtoolnix-gui
 
 }

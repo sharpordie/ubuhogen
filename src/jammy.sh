@@ -354,7 +354,7 @@ update_github_desktop() {
 	sudo apt -y install gnupg wget
 
 	# Update package
-	wget -qO - https://apt.packages.shiftkey.dev/gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/shiftkey-packages.gpg > /dev/null 
+	wget -qO - https://apt.packages.shiftkey.dev/gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/shiftkey-packages.gpg >/dev/null
 	sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/shiftkey-packages.gpg] https://apt.packages.shiftkey.dev/ubuntu/ any main" > /etc/apt/sources.list.d/shiftkey-packages.list'
 	sudo apt update && sudo apt install -y github-desktop
 
@@ -423,6 +423,18 @@ update_mambaforge() {
 
 	# Change settings
 	"$deposit/condabin/conda" config --set auto_activate_base false
+
+}
+
+update_mkvtoolnix() {
+
+	# Update dependencies
+	sudo apt -y install gnupg wget
+
+	# Update package
+	sudo wget -O /usr/share/keyrings/gpg-pub-moritzbunkus.gpg https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg
+	sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/gpg-pub-moritzbunkus.gpg] https://mkvtoolnix.download/ubuntu/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/mkvtoolnix.download.list'
+	sudo apt update && sudo apt install -y mkvtoolnix mkvtoolnix-gui
 
 }
 
@@ -596,6 +608,33 @@ update_pycharm() {
 
 }
 
+update_remmina() {
+
+	# Update package
+	sudo add-apt-repository -y ppa:remmina-ppa-team/remmina-next-daily
+	sudo apt update && sudo apt install -y remmina
+
+}
+
+update_remote_desktop() {
+
+	# Handle shits
+	# sudo loginctl unlock-session 1
+	# gnome-keyring-daemon --unlock
+
+	# Handle certificate
+	# TODO: Try on newly installed system
+	local deposit="$HOME/.local/share/gnome-remote-desktop"
+	local present=$([[ -f "$deposit/rdp-tls.key" ]] && echo "true" || echo "false")
+	if [[ "$present" == "false" ]]; then mkdir -p "$deposit" && mv rdp-tls.key rdp-tls.crt "$deposit"; fi
+
+	# Enable rdp
+	grdctl rdp disable-view-only
+	grdctl rdp enable
+	systemctl --user enable --now gnome-remote-desktop.service
+
+}
+
 update_system() {
 
 	# Handle parameters
@@ -742,18 +781,20 @@ main() {
 
 	# Handle members
 	local members=(
-		"update_appearance"
-		"update_system"
-		"update_chromium"
+		# "update_appearance"
+		# "update_system"
+		# "update_chromium"
 		# "update_git 'main' 'sharpordie' '72373746+sharpordie@users.noreply.github.com'"
 		# "update_vscode"
-		# # "update_antares"
+
+		# "update_antares"
 		# "update_bruno"
 		# "update_docker"
 		# "update_github_cli"
 		"update_github_desktop"
 		# "update_keepassxc"
 		# "update_mambaforge"
+		"update_mkvtoolnix"
 		# "update_mpv"
 		# "update_nodejs"
 		# "update_nvidia_cuda"
@@ -761,7 +802,10 @@ main() {
 		# "update_pgadmin"
 		# "update_postgresql"
 		# "update_pycharm"
-		"update_yt_dlp"
+		# "update_remote_desktop"
+		"update_remmina"
+		# "update_yt_dlp"
+
 		# "update_odoo"
 	)
 

@@ -53,14 +53,16 @@ update_appearance() {
 	gsettings set org.gnome.shell favorite-apps "[ \
 		'org.gnome.Nautilus.desktop', \
 		'ungoogled-chromium.desktop', \
+		'code.desktop', \
 		'org.gnome.Terminal.desktop', \
+		'virtualbox.desktop', \
 		'jetbrains-pycharm.desktop', \
 		'pgadmin4.desktop', \
-		'code.desktop', \
 		'github-desktop.desktop', \
 		'com.obsproject.Studio.desktop', \
 		'io.mpv.Mpv.desktop', \
-		'org.keepassxc.KeePassXC.desktop'
+		'org.keepassxc.KeePassXC.desktop', \
+		'org.remmina.Remmina.desktop'
 	]"
 
 	# Change fonts
@@ -666,6 +668,26 @@ update_system() {
 
 }
 
+update_virtualbox() {
+
+	# Update dependencies
+	sudo apt -y install gnupg wget
+
+	# Update package
+	wget -O- https://www.virtualbox.org/download/oracle_vbox_2016.asc | sudo gpg --yes --output /usr/share/keyrings/oracle-virtualbox-2016.gpg --dearmor
+	echo "deb [arch=amd64 signed-by=/usr/share/keyrings/oracle-virtualbox-2016.gpg] http://download.virtualbox.org/virtualbox/debian $(lsb_release -cs) contrib" | sudo tee /etc/apt/sources.list.d/virtualbox.list
+	sudo apt update && sudo apt install -y virtualbox-7.0
+	sudo usermod -a -G vboxusers "$USER"
+
+	# Finish installation
+	local version=$(vboxmanage -v | cut -dr -f1 | grep -oP "[\d.]+" | tail -1)
+	local address="https://download.virtualbox.org/virtualbox/$version/Oracle_VM_VirtualBox_Extension_Pack-$version.vbox-extpack"
+	local package="$(mktemp -d)/$(basename "$address")"
+	curl -LA "mozilla/5.0" "$address" -o "$package"
+	yes | sudo vboxmanage extpack install --replace "$package"
+
+}
+
 update_vscode() {
 
 	# Update dependencies
@@ -781,32 +803,33 @@ main() {
 
 	# Handle members
 	local members=(
-		# "update_appearance"
-		# "update_system"
-		# "update_chromium"
-		# "update_git 'main' 'sharpordie' '72373746+sharpordie@users.noreply.github.com'"
-		# "update_vscode"
+		"update_appearance"
+		"update_system"
+		"update_chromium"
+		"update_git 'main' 'sharpordie' '72373746+sharpordie@users.noreply.github.com'"
+		"update_vscode"
 
 		# "update_antares"
 		# "update_bruno"
-		# "update_docker"
-		# "update_github_cli"
+		"update_docker"
+		"update_github_cli"
 		"update_github_desktop"
-		# "update_keepassxc"
-		# "update_mambaforge"
+		"update_keepassxc"
+		"update_mambaforge"
 		"update_mkvtoolnix"
-		# "update_mpv"
-		# "update_nodejs"
-		# "update_nvidia_cuda"
-		# "update_obs"
-		# "update_pgadmin"
-		# "update_postgresql"
-		# "update_pycharm"
-		# "update_remote_desktop"
+		"update_mpv"
+		"update_nodejs"
+		"update_nvidia_cuda"
+		"update_obs"
+		"update_pgadmin"
+		"update_postgresql"
+		"update_pycharm"
+		"update_remote_desktop"
 		"update_remmina"
-		# "update_yt_dlp"
+		"update_virtualbox"
+		"update_yt_dlp"
 
-		# "update_odoo"
+		"update_odoo"
 	)
 
 	# Output progress

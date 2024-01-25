@@ -53,12 +53,15 @@ update_appearance() {
 	gsettings set org.gnome.shell favorite-apps "[ \
 		'org.gnome.Nautilus.desktop', \
 		'ungoogled-chromium.desktop', \
+		'org.jdownloader.JDownloader.desktop', \
+		'org.gnome.shell favorite-apps', \
 		'code.desktop', \
 		'org.gnome.Terminal.desktop', \
 		'virtualbox.desktop', \
 		'jetbrains-pycharm.desktop', \
 		'pgadmin4.desktop', \
 		'github-desktop.desktop', \
+		'figma-linux.desktop', \
 		'com.obsproject.Studio.desktop', \
 		'io.mpv.Mpv.desktop', \
 		'org.keepassxc.KeePassXC.desktop', \
@@ -318,6 +321,19 @@ update_eid() {
 
 }
 
+update_figma() {
+
+	# Update package
+	sudo add-apt-repository -y ppa:chrdevs/figma
+	sudo apt update && sudo apt install -y figma-linux libgconf-2-4
+	sudo chmod a+x /opt/figma-linux/figma-linux
+
+	# Change desktop
+	local desktop="/usr/share/applications/figma-linux.desktop"
+	sudo sed -i "s/Name=.*/Name=Figma/" "$desktop"
+
+}
+
 update_git() {
 
 	# Handle parameters
@@ -362,6 +378,60 @@ update_github_desktop() {
 
 }
 
+update_jdownloader() {
+
+	# Handle parameters
+	local deposit=${1:-$HOME/Downloads/JD2}
+
+	# Update dependencies
+	sudo apt install -y flatpak jq moreutils
+
+	# Update package
+	local starter="/var/lib/flatpak/exports/bin/org.jdownloader.JDownloader"
+	local present=$([[ -f "$starter" ]] && echo true || echo false)
+	sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+	sudo flatpak remote-modify --enable flathub
+	flatpak install -y flathub org.jdownloader.JDownloader
+	sudo update-desktop-database
+
+	# Create deposit
+	mkdir -p "$deposit"
+
+	# Change desktop
+	local desktop="/var/lib/flatpak/exports/share/applications/org.jdownloader.JDownloader.desktop"
+	sudo sed -i "s/Icon=.*/Icon=jdownloader/" "$desktop"
+
+	# Change settings
+	if [[ $present = false ]]; then
+		local appdata="$HOME/.var/app/org.jdownloader.JDownloader/data/jdownloader/cfg"
+		local config1="$appdata/org.jdownloader.settings.GraphicalUserInterfaceSettings.json"
+		local config2="$appdata/org.jdownloader.settings.GeneralSettings.json"
+		local config3="$appdata/org.jdownloader.gui.jdtrayicon.TrayExtension.json"
+		local config4="$appdata/org.jdownloader.extensions.extraction.ExtractionExtension.json"
+		(flatpak run org.jdownloader.JDownloader >/dev/null 2>&1 &) && sleep 8
+		while [[ ! -f "$config1" ]]; do sleep 2; done
+		flatpak kill org.jdownloader.JDownloader && sleep 8
+		jq ".bannerenabled = false" "$config1" | sponge "$config1"
+		jq ".clipboardmonitored = false" "$config1" | sponge "$config1"
+		jq ".donatebuttonlatestautochange = 4102444800000" "$config1" | sponge "$config1"
+		jq ".donatebuttonstate = \"AUTO_HIDDEN\"" "$config1" | sponge "$config1"
+		jq ".myjdownloaderviewvisible = false" "$config1" | sponge "$config1"
+		jq ".premiumalertetacolumnenabled = false" "$config1" | sponge "$config1"
+		jq ".premiumalertspeedcolumnenabled = false" "$config1" | sponge "$config1"
+		jq ".premiumalerttaskcolumnenabled = false" "$config1" | sponge "$config1"
+		jq ".specialdealoboomdialogvisibleonstartup = false" "$config1" | sponge "$config1"
+		jq ".specialdealsenabled = false" "$config1" | sponge "$config1"
+		jq ".speedmetervisible = false" "$config1" | sponge "$config1"
+		jq ".defaultdownloadfolder = \"$deposit\"" "$config2" | sponge "$config2"
+		jq ".enabled = false" "$config3" | sponge "$config3"
+		jq ".enabled = false" "$config4" | sponge "$config4"
+		update_chromium_extension "fbcohnmimjicjdomonkcbcpbpnhggkip"
+	fi
+
+	update_chromium_extension "fbcohnmimjicjdomonkcbcpbpnhggkip"
+
+}
+
 update_jetbrains_plugin() {
 
 	# Handle parameters
@@ -393,6 +463,57 @@ update_jetbrains_plugin() {
 			sleep 1
 		done
 	done
+
+}
+
+update_joal_desktop() {
+
+	# Update dependencies
+	sudo apt -y install curl jq libfuse2
+
+	# Update package
+	local address="https://api.github.com/repos/anthonyraymond/joal-desktop/releases/latest"
+	local version=$(curl -LA "mozilla/5.0" "$address" | jq -r ".tag_name" | tr -d "v")
+	local current=$(find $HOME/Applications/JoalDesktop-*.AppImage | grep -oP "[\d.]+(?=.App)" | head -1)
+	local updated=$(dpkg --compare-versions "$current" "ge" "$version" && echo true || echo false)
+	if [[ $updated = false ]]; then
+		local address="https://github.com/anthonyraymond/joal-desktop/releases"
+		local address="$address/download/v$version/JoalDesktop-$version-linux-x86_64.AppImage"
+		local package="$HOME/Applications/JoalDesktop-$version.AppImage"
+		mkdir -p "$HOME/Applications"
+		! grep -q "Applications" "$HOME/.hidden" 2>/dev/null && echo "Applications" >>"$HOME/.hidden"
+		rm -f "$HOME/Applications/JoalDesktop-*.AppImage"
+		curl -LA "mozilla/5.0" "$address" -o "$package" && chmod +x "$package"
+	fi
+
+	# Change desktop
+	local desktop="/usr/share/applications/joal-desktop.desktop"
+	cat /dev/null | sudo tee "$desktop"
+	echo "[Desktop Entry]" | sudo tee -a "$desktop"
+	echo "Name=Joal" | sudo tee -a "$desktop"
+	echo "Exec=$HOME/Applications/JoalDesktop-$version.AppImage --no-sandbox %U" | sudo tee -a "$desktop"
+	echo "Terminal=false" | sudo tee -a "$desktop"
+	echo "Type=Application" | sudo tee -a "$desktop"
+	# echo "Icon=appimagekit_e04f1b5d20cd264756ff6ab87e146149_joal-desktop" | sudo tee -a "$desktop"
+	echo "Icon=downloader-arrow" | sudo tee -a "$desktop"
+	echo "StartupWMClass=JoalDesktop" | sudo tee -a "$desktop"
+	echo "X-AppImage-Version=$version" | sudo tee -a "$desktop"
+	echo "Comment=A tool to fake your torrent tracker upload" | sudo tee -a "$desktop"
+	echo "Categories=Utility;" | sudo tee -a "$desktop"
+	echo "TryExec=$HOME/Applications/JoalDesktop-$version.AppImage" | sudo tee -a "$desktop"
+	# echo "X-AppImage-Old-Icon=joal-desktop" | sudo tee -a "$desktop"
+	# echo "X-AppImage-Identifier=e04f1b5d20cd264756ff6ab87e146149" | sudo tee -a "$desktop"
+
+	# Change settings
+	local configs="$HOME/.config/JoalDesktop/joal-core/config.json"
+	mkdir -p "$(dirname $configs)"
+	[[ -s "$configs" ]] || echo "{}" >"$configs"
+	jq '."minUploadRate" = 300' "$configs" | sponge "$configs"
+	jq '."maxUploadRate" = 450' "$configs" | sponge "$configs"
+	jq '."simultaneousSeed" = 200' "$configs" | sponge "$configs"
+	jq '."client" = "transmission-3.00.client"' "$configs" | sponge "$configs"
+	jq '."keepTorrentWithZeroLeechers" = true' "$configs" | sponge "$configs"
+	jq '."uploadRatioTarget" = -1' "$configs" | sponge "$configs"
 
 }
 
@@ -637,6 +758,37 @@ update_remote_desktop() {
 
 }
 
+update_samba() {
+
+	# Handle parameters
+	local sharing=${1:-$HOME}
+	local secrets=${2:-rootroot}
+
+	# Update package
+	sudo apt install -y samba
+
+	# Change password
+	# smbpasswd -a "$USER" -s "$secrets"
+	smbpasswd -an "$USER"
+	# smbpasswd "$USER" -n
+
+	# Change settings
+	local configs="/etc/samba/smb.conf"
+	if ! grep -q "myshare" "$configs" 2>/dev/null; then
+		[[ -s "$configs" ]] || sudo touch "$configs"
+		[[ -z $(tail -1 "$configs") ]] || echo "" | sudo tee -a "$configs"
+		echo "[new_share]" | sudo tee -a "$configs"
+		echo "    comment = myshare" | sudo tee -a "$configs"
+		echo "    path = $sharing" | sudo tee -a "$configs"
+		echo "    browseable = yes" | sudo tee -a "$configs"
+		echo "    read only = no" | sudo tee -a "$configs"
+		echo "    guest ok =no" | sudo tee -a "$configs"
+		echo "    valid user = $USER" | sudo tee -a "$configs"
+	fi
+	sudo systemctl restart smbd
+
+}
+
 update_system() {
 
 	# Handle parameters
@@ -812,6 +964,9 @@ main() {
 		# "update_antares"
 		# "update_bruno"
 		"update_docker"
+		"update_figma"
+		"update_jdownloader"
+		"update_joal_desktop"
 		"update_github_cli"
 		"update_github_desktop"
 		"update_keepassxc"
@@ -826,6 +981,7 @@ main() {
 		"update_pycharm"
 		"update_remote_desktop"
 		"update_remmina"
+		"update_samba"
 		"update_virtualbox"
 		"update_yt_dlp"
 

@@ -55,9 +55,12 @@ update_appearance() {
 		'ungoogled-chromium.desktop', \
 		'org.gnome.Terminal.desktop', \
 		'jetbrains-pycharm.desktop', \
+		'pgadmin4.desktop', \
 		'code.desktop', \
+		'github-desktop.desktop', \
 		'com.obsproject.Studio.desktop', \
-		'io.mpv.Mpv.desktop' \
+		'io.mpv.Mpv.desktop', \
+		'org.keepassxc.KeePassXC.desktop'
 	]"
 
 	# Change fonts
@@ -119,8 +122,8 @@ update_chromium() {
 	sudo apt install -y curl jq
 
 	# Remove package
-	sudo apt remove --purge -y ungoogled-chromium
-	rm -rf "$HOME/.config/chromium"
+	# sudo apt remove --purge -y ungoogled-chromium
+	# rm -rf "$HOME/.config/chromium"
 
 	# Update package
 	local present=$([[ -x "$(command -v ungoogled-chromium)" ]] && echo true || echo false)
@@ -227,7 +230,6 @@ update_chromium() {
 	fi
 
 	# Update bypass-paywalls-chrome-clean extension
-	rm -rf "$HOME/.config/chromium/Unpacked" # Remove dummy line
 	local address="https://gitlab.com/magnolia1234/bypass-paywalls-chrome-clean"
 	local address="$address/-/archive/master/bypass-paywalls-chrome-clean-master.zip"
 	update_chromium_extension "$address"
@@ -343,6 +345,18 @@ update_github_cli() {
 	sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
 	echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
 	sudo apt update && sudo apt install -y gh
+
+}
+
+update_github_desktop() {
+
+	# Update dependencies
+	sudo apt -y install gnupg wget
+
+	# Update package
+	wget -qO - https://apt.packages.shiftkey.dev/gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/shiftkey-packages.gpg > /dev/null 
+	sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/shiftkey-packages.gpg] https://apt.packages.shiftkey.dev/ubuntu/ any main" > /etc/apt/sources.list.d/shiftkey-packages.list'
+	sudo apt update && sudo apt install -y github-desktop
 
 }
 
@@ -737,6 +751,7 @@ main() {
 		# "update_bruno"
 		# "update_docker"
 		# "update_github_cli"
+		"update_github_desktop"
 		# "update_keepassxc"
 		# "update_mambaforge"
 		# "update_mpv"
